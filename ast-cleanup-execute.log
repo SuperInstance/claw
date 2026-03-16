@@ -1,0 +1,39 @@
+AST Import Cleaner for Claw
+Mode: LIVE
+Scanning files...
+
+Found 3774 TypeScript files to scan
+
+
+============================================================
+AST Import Cleaner Summary
+============================================================
+Mode: LIVE (changes written)
+Files scanned: 3774
+Files with broken imports: 88
+Total imports to remove: 153
+
+By Category:
+  pi-embedded-helpers: 32
+  removed-extension: 98
+  removed-channel: 9
+  cli-missing: 8
+  channels-missing: 6
+file:///C:/Users/casey/polln/claw/scripts/ast-import-cleaner.mjs:323
+    fs.writeFileSync(reportPath, JSON.stringify(stats, null, 2));
+                                      ^
+
+TypeError: Converting circular structure to JSON
+    --> starting at object with constructor 'SourceFileObject'
+    |     property 'statements' -> object with constructor 'Array'
+    |     index 0 -> object with constructor 'NodeObject'
+    --- property 'parent' closes the circle
+    at JSON.stringify (<anonymous>)
+    at generateReport (file:///C:/Users/casey/polln/claw/scripts/ast-import-cleaner.mjs:323:39)
+    at main (file:///C:/Users/casey/polln/claw/scripts/ast-import-cleaner.mjs:343:3)
+    at file:///C:/Users/casey/polln/claw/scripts/ast-import-cleaner.mjs:347:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.14.0

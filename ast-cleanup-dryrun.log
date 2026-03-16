@@ -1,0 +1,354 @@
+AST Import Cleaner for Claw
+Mode: DRY RUN
+Scanning files...
+
+Found 3774 TypeScript files to scan
+
+
+src\agents\bootstrap-budget.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\bootstrap-files.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\cli-runner\helpers.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\context.test.ts
+  [removed-extension] ./pi-extensions/session-manager-runtime-registry.js
+
+src\agents\failover-error.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\model-fallback-observation.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\model-fallback.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\model-fallback.types.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\models.profiles.live.test.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers/errors.js
+
+src\agents\pi-embedded-runner\compact.ts
+  [removed-extension] ../../../extensions/signal/src/reaction-level.js
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\extensions.test.ts
+  [removed-extension] ../pi-extensions/compaction-safeguard-runtime.js
+  [removed-extension] ../pi-extensions/compaction-safeguard.js
+
+src\agents\pi-embedded-runner\extensions.ts
+  [removed-extension] ../pi-extensions/compaction-safeguard-runtime.js
+  [removed-extension] ../pi-extensions/compaction-safeguard.js
+  [removed-extension] ../pi-extensions/context-pruning.js
+  [removed-extension] ../pi-extensions/context-pruning/runtime.js
+  [removed-extension] ../pi-extensions/context-pruning/settings.js
+  [removed-extension] ../pi-extensions/context-pruning/tools.js
+
+src\agents\pi-embedded-runner\google.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run\attempt.ts
+  [removed-extension] ../../../../extensions/signal/src/reaction-level.js
+  [pi-embedded-helpers] ../../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run\failover-observation.ts
+  [pi-embedded-helpers] ../../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run\images.ts
+  [removed-extension] ../../../../extensions/whatsapp/src/media.js
+
+src\agents\pi-embedded-runner\run\payloads.errors.test.ts
+  [pi-embedded-helpers] ../../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run\payloads.ts
+  [pi-embedded-helpers] ../../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run.overflow-compaction.loop.test.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run.overflow-compaction.test.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\run.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\pi-embedded-runner\system-prompt.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\system-prompt-report.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\system-prompt.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers.js
+
+src\agents\tools\image-tool.ts
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\agents\tools\media-tool-shared.ts
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\agents\tools\pdf-tool.ts
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\agents\tools\sessions-helpers.ts
+  [pi-embedded-helpers] ../pi-embedded-helpers.js
+
+src\agents\tools\slack-actions.ts
+  [removed-extension] ../../../extensions/slack/src/accounts.js
+  [removed-extension] ../../../extensions/slack/src/actions.js
+  [removed-extension] ../../../extensions/slack/src/blocks-input.js
+  [removed-extension] ../../../extensions/slack/src/sent-thread-cache.js
+  [removed-extension] ../../../extensions/slack/src/targets.js
+
+src\agents\tools\whatsapp-actions.ts
+  [removed-extension] ../../../extensions/whatsapp/src/send.js
+
+src\agents\tools\whatsapp-target-auth.ts
+  [removed-extension] ../../../extensions/whatsapp/src/accounts.js
+
+src\agents\transcript-policy.ts
+  [pi-embedded-helpers] ./pi-embedded-helpers/google.js
+
+src\auto-reply\reply\agent-runner-execution.ts
+  [pi-embedded-helpers] ../../agents/pi-embedded-helpers.js
+
+src\auto-reply\reply\commands-allowlist.ts
+  [removed-extension] ../../../extensions/imessage/src/accounts.js
+  [removed-extension] ../../../extensions/signal/src/accounts.js
+  [removed-extension] ../../../extensions/slack/src/accounts.js
+  [removed-extension] ../../../extensions/slack/src/resolve-users.js
+  [removed-extension] ../../../extensions/whatsapp/src/accounts.js
+
+src\auto-reply\reply\commands-context-report.ts
+  [pi-embedded-helpers] ../../agents/pi-embedded-helpers.js
+
+src\auto-reply\reply\commands-system-prompt.ts
+  [pi-embedded-helpers] ../../agents/pi-embedded-helpers.js
+
+src\auto-reply\reply\line-directives.ts
+  [removed-channel] ../../line/flex-templates.js
+  [removed-channel] ../../line/types.js
+
+src\auto-reply\reply\normalize-reply.ts
+  [pi-embedded-helpers] ../../agents/pi-embedded-helpers.js
+
+src\auto-reply\reply\reply-payloads.ts
+  [pi-embedded-helpers] ../../agents/pi-embedded-helpers.js
+
+src\auto-reply\reply\route-reply.test.ts
+  [removed-extension] ../../../extensions/mattermost/src/channel.js
+
+src\auto-reply\reply\route-reply.ts
+  [removed-extension] ../../../extensions/slack/src/blocks-input.js
+  [removed-extension] ../../../extensions/slack/src/interactive-replies.js
+
+src\auto-reply\reply\slack-directives.ts
+  [removed-extension] ../../../extensions/slack/src/blocks-input.js
+  [removed-extension] ../../../extensions/slack/src/truncate.js
+
+src\commands\agent\delivery.ts
+  [cli-missing] ../../cli/outbound-send-deps.js
+
+src\commands\channel-test-helpers.ts
+  [removed-extension] ../../extensions/imessage/src/channel.js
+  [removed-extension] ../../extensions/signal/src/channel.js
+  [removed-extension] ../../extensions/slack/src/channel.js
+  [removed-extension] ../../extensions/whatsapp/src/channel.js
+
+src\commands\channels\capabilities.test.ts
+  [removed-extension] ../../../extensions/slack/src/scopes.js
+
+src\commands\channels\capabilities.ts
+  [removed-extension] ../../../extensions/slack/src/scopes.js
+
+src\commands\channels.surfaces-signal-runtime-errors-channels-status-output.test.ts
+  [removed-extension] ../../extensions/signal/src/channel.js
+
+src\commands\doctor-bootstrap-size.ts
+  [pi-embedded-helpers] ../agents/pi-embedded-helpers.js
+
+src\commands\message.ts
+  [cli-missing] ../cli/outbound-send-deps.js
+
+src\commands\onboarding\registry.ts
+  [removed-extension] ../../../extensions/imessage/src/channel.js
+  [removed-extension] ../../../extensions/signal/src/channel.js
+  [removed-extension] ../../../extensions/slack/src/channel.js
+  [removed-extension] ../../../extensions/whatsapp/src/channel.js
+
+src\config\plugin-auto-enable.ts
+  [removed-extension] ../../extensions/whatsapp/src/accounts.js
+
+src\cron\delivery.ts
+  [cli-missing] ../cli/outbound-send-deps.js
+
+src\cron\isolated-agent\delivery-dispatch.ts
+  [cli-missing] ../../cli/outbound-send-deps.js
+
+src\cron\isolated-agent\delivery-target.test.ts
+  [removed-extension] ../../../extensions/whatsapp/src/accounts.js
+
+src\cron\isolated-agent\delivery-target.ts
+  [removed-extension] ../../../extensions/whatsapp/src/accounts.js
+
+src\cron\isolated-agent\run.ts
+  [cli-missing] ../../cli/outbound-send-deps.js
+
+src\cron\types.ts
+  [pi-embedded-helpers] ../agents/pi-embedded-helpers.js
+
+src\gateway\gateway-models.profiles.live.test.ts
+  [pi-embedded-helpers] ../agents/pi-embedded-helpers/errors.js
+
+src\gateway\server-cron.ts
+  [cli-missing] ../cli/outbound-send-deps.js
+
+src\gateway\server-http.ts
+  [removed-extension] ../../extensions/slack/src/http/index.js
+
+src\gateway\server-node-events.ts
+  [cli-missing] ../cli/outbound-send-deps.js
+
+src\gateway\server.agent.gateway-server-agent-b.test.ts
+  [removed-extension] ../../extensions/whatsapp/src/channel.js
+
+src\infra\heartbeat-runner.model-override.test.ts
+  [removed-extension] ../../extensions/whatsapp/src/channel.js
+  [removed-extension] ../../extensions/whatsapp/src/runtime.js
+
+src\infra\heartbeat-runner.test-harness.ts
+  [removed-extension] ../../extensions/slack/src/channel.js
+  [removed-extension] ../../extensions/slack/src/runtime.js
+  [removed-extension] ../../extensions/whatsapp/src/channel.js
+  [removed-extension] ../../extensions/whatsapp/src/runtime.js
+
+src\infra\outbound\deliver.test.ts
+  [removed-extension] ../../../extensions/signal/src/format.js
+
+src\infra\outbound\deliver.ts
+  [removed-extension] ../../../extensions/signal/src/format.js
+  [removed-extension] ../../../extensions/signal/src/send.js
+
+src\infra\outbound\message-action-params.ts
+  [removed-extension] ../../../extensions/slack/src/targets.js
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\infra\outbound\message-action-runner.context.test.ts
+  [removed-extension] ../../../extensions/slack/src/channel.js
+  [removed-extension] ../../../extensions/whatsapp/src/channel.js
+
+src\infra\outbound\message-action-runner.media.test.ts
+  [removed-extension] ../../../extensions/slack/src/channel.js
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\infra\outbound\message-action-runner.test-helpers.ts
+  [removed-extension] ../../../extensions/slack/src/channel.js
+  [removed-extension] ../../../extensions/slack/src/runtime.js
+
+src\infra\outbound\outbound-session.ts
+  [removed-extension] ../../../extensions/imessage/src/targets.js
+  [removed-extension] ../../../extensions/signal/src/identity.js
+  [removed-extension] ../../../extensions/slack/src/accounts.js
+  [removed-extension] ../../../extensions/slack/src/client.js
+  [removed-extension] ../../../extensions/slack/src/monitor/allow-list.js
+  [removed-extension] ../../../extensions/slack/src/targets.js
+
+src\infra\outbound\targets.shared-test.ts
+  [removed-extension] ../../../extensions/whatsapp/src/channel.js
+
+src\infra\outbound\targets.ts
+  [removed-extension] ../../../extensions/slack/src/targets.js
+
+src\line\bot-access.ts
+  [channels-missing] ../channels/allow-from.js
+
+src\media\outbound-attachment.ts
+  [removed-extension] ../../extensions/whatsapp/src/media.js
+
+src\plugin-sdk\channel-config-helpers.ts
+  [removed-extension] ../../extensions/imessage/src/accounts.js
+  [removed-extension] ../../extensions/whatsapp/src/accounts.js
+  [channels-missing] ../channels/plugins/normalize/whatsapp.js
+
+src\plugin-sdk\outbound-media.ts
+  [removed-extension] ../../extensions/whatsapp/src/media.js
+
+src\plugin-sdk\slack-message-actions.ts
+  [removed-extension] ../../extensions/slack/src/blocks-input.js
+
+src\plugins\runtime\runtime-channel.ts
+  [removed-extension] ../../../extensions/imessage/src/monitor.js
+  [removed-extension] ../../../extensions/imessage/src/probe.js
+  [removed-extension] ../../../extensions/imessage/src/send.js
+  [removed-extension] ../../../extensions/signal/src/index.js
+  [removed-extension] ../../../extensions/signal/src/probe.js
+  [removed-extension] ../../../extensions/signal/src/send.js
+  [removed-extension] ../../../extensions/slack/src/directory-live.js
+  [removed-extension] ../../../extensions/slack/src/index.js
+  [removed-extension] ../../../extensions/slack/src/probe.js
+  [removed-extension] ../../../extensions/slack/src/resolve-channels.js
+  [removed-extension] ../../../extensions/slack/src/resolve-users.js
+  [removed-extension] ../../../extensions/slack/src/send.js
+  [channels-missing] ../../channels/plugins/actions/discord.js
+  [channels-missing] ../../channels/plugins/actions/signal.js
+  [channels-missing] ../../channels/plugins/actions/telegram.js
+  [removed-channel] ../../line/accounts.js
+  [removed-channel] ../../line/monitor.js
+  [removed-channel] ../../line/probe.js
+  [removed-channel] ../../line/send.js
+  [removed-channel] ../../line/template-messages.js
+
+src\plugins\runtime\runtime-media.ts
+  [removed-extension] ../../../extensions/whatsapp/src/media.js
+
+src\plugins\runtime\runtime-tools.ts
+  [cli-missing] ../../cli/memory-cli.js
+
+src\plugins\runtime\runtime-whatsapp.ts
+  [removed-extension] ../../../extensions/whatsapp/src/active-listener.js
+  [removed-extension] ../../../extensions/whatsapp/src/auth-store.js
+
+src\plugins\voice-call.plugin.test.ts
+  [removed-extension] ../../extensions/voice-call/index.js
+
+src\security\dm-policy-channel-smoke.test.ts
+  [removed-extension] ../../extensions/bluebubbles/src/targets.js
+  [removed-extension] ../../extensions/mattermost/src/mattermost/monitor-auth.js
+  [removed-extension] ../../extensions/signal/src/identity.js
+
+src\security\dm-policy-shared.ts
+  [channels-missing] ../channels/allow-from.js
+
+src\test-utils\imessage-test-plugin.ts
+  [removed-extension] ../../extensions/imessage/src/targets.js
+
+src\tts\prepare-text.test.ts
+  [removed-channel] ../line/markdown-to-line.js
+
+src\tts\tts.ts
+  [removed-channel] ../line/markdown-to-line.js
+
+============================================================
+AST Import Cleaner Summary
+============================================================
+Mode: DRY RUN (no changes made)
+Files scanned: 3774
+Files with broken imports: 88
+Total imports to remove: 153
+
+By Category:
+  pi-embedded-helpers: 32
+  removed-extension: 98
+  removed-channel: 9
+  cli-missing: 8
+  channels-missing: 6
+
+------------------------------------------------------------
+This was a dry run. To apply changes, run:
+  node scripts/ast-import-cleaner.mjs --write

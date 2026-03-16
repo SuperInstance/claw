@@ -1,0 +1,50 @@
+
+> openclaw@2026.3.15 build
+> node scripts/tsdown-build.mjs && node scripts/runtime-postbuild.mjs
+
+
+ ERROR  Error: Build failed with 4 errors:
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve './cli/deps.js' in src/index.ts
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/index.ts:7:35 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m7 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mc[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249ma[0m[38;5;249mt[0m[38;5;249me[0m[38;5;249mD[0m[38;5;249me[0m[38;5;249mf[0m[38;5;249ma[0m[38;5;249mu[0m[38;5;249ml[0m[38;5;249mt[0m[38;5;249mD[0m[38;5;249me[0m[38;5;249mp[0m[38;5;249ms[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m"./cli/deps.js"[38;5;249m;[0m
+ [38;5;240m  │[0m                                   ───────┬───────  
+ [38;5;240m  │[0m                                          ╰───────── Module not found.
+[38;5;246m───╯[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve './cli/prompt.js' in src/index.ts
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/index.ts:8:29 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m8 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mp[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mt[0m[38;5;249mY[0m[38;5;249me[0m[38;5;249ms[0m[38;5;249mN[0m[38;5;249mo[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m"./cli/prompt.js"[38;5;249m;[0m
+ [38;5;240m  │[0m                             ────────┬────────  
+ [38;5;240m  │[0m                                     ╰────────── Module not found.
+[38;5;246m───╯[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve './cli/wait.js' in src/index.ts
+   [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/index.ts:9:29 [38;5;246m][0m
+   [38;5;246m│[0m
+ [38;5;246m9 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mw[0m[38;5;249ma[0m[38;5;249mi[0m[38;5;249mt[0m[38;5;249mF[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249me[0m[38;5;249mv[0m[38;5;249me[0m[38;5;249mr[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m"./cli/wait.js"[38;5;249m;[0m
+ [38;5;240m  │[0m                             ───────┬───────  
+ [38;5;240m  │[0m                                    ╰───────── Module not found.
+[38;5;246m───╯[0m
+
+[31m[UNRESOLVED_IMPORT] Error:[0m Could not resolve './cli/program.js' in src/index.ts
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/index.ts:46:30 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m46 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m[38;5;249m{[0m[38;5;249m [0m[38;5;249mb[0m[38;5;249mu[0m[38;5;249mi[0m[38;5;249ml[0m[38;5;249md[0m[38;5;249mP[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mg[0m[38;5;249mr[0m[38;5;249ma[0m[38;5;249mm[0m[38;5;249m [0m[38;5;249m}[0m[38;5;249m [0m[38;5;249mf[0m[38;5;249mr[0m[38;5;249mo[0m[38;5;249mm[0m[38;5;249m [0m"./cli/program.js"[38;5;249m;[0m
+ [38;5;240m   │[0m                              ─────────┬────────  
+ [38;5;240m   │[0m                                       ╰────────── Module not found.
+[38;5;246m────╯[0m
+
+    at aggregateBindingErrorsIntoJsError (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/rolldown@1.0.0-rc.9/node_modules/rolldown/dist/shared/error-CP8smW_P.mjs:48:18)
+    at unwrapBindingResult (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/rolldown@1.0.0-rc.9/node_modules/rolldown/dist/shared/error-CP8smW_P.mjs:18:128)
+    at #build (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/rolldown@1.0.0-rc.9/node_modules/rolldown/dist/shared/rolldown-build-4YnQkA76.mjs:3311:34)
+    at async build (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/rolldown@1.0.0-rc.9/node_modules/rolldown/dist/index.mjs:46:22)
+    at async Promise.all (index 0)
+    at async buildSingle (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/tsdown@0.21.2_@typescript+n_6d99c587e2eb794417d94f9e7b44c568/node_modules/tsdown/dist/build-CpOl_krN.mjs:744:19)
+    at async Promise.all (index 0)
+    at async buildWithConfigs (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/tsdown@0.21.2_@typescript+n_6d99c587e2eb794417d94f9e7b44c568/node_modules/tsdown/dist/build-CpOl_krN.mjs:700:18)
+    at async CAC.<anonymous> (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/tsdown@0.21.2_@typescript+n_6d99c587e2eb794417d94f9e7b44c568/node_modules/tsdown/dist/run.mjs:25:2)
+    at async runCLI (file:///C:/Users/casey/polln/claw/node_modules/.pnpm/tsdown@0.21.2_@typescript+n_6d99c587e2eb794417d94f9e7b44c568/node_modules/tsdown/dist/run.mjs:49:3)
+
