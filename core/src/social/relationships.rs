@@ -5,8 +5,6 @@
 use crate::social::{RelationshipType, SocialAgentMetadata, SocialError, SocialResult};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// Relationship state
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

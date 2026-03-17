@@ -10,7 +10,7 @@ use crate::social::{
 use crate::social::strategies::CoordinationStrategy;
 use crate::social::message::MessageBroker;
 use crate::social::patterns::{
-    CoWorkerPattern, DelegatePattern, MasterSlavePattern, ObserverPattern, PeerPattern,
+    CoWorkerPattern, MasterSlavePattern,
 };
 use crate::social::strategies::{
     ConsensusStrategy, MajorityVoteStrategy, ParallelStrategy, SequentialStrategy,

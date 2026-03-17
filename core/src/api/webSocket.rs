@@ -3,7 +3,7 @@
 //! This module provides WebSocket functionality for real-time
 //! communication with connected clients.
 
-use crate::api::handlers::WsMessage;
+// WebSocket handler module
 use axum::{
     extract::{
         State,

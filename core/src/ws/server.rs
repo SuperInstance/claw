@@ -17,7 +17,6 @@ use tokio_tungstenite::{
         handshake::server::{Request, Response},
         Message as TungsteniteMessage,
     },
-    WebSocketStream,
 };
 use tracing::{debug, error, info, instrument, warn};
 

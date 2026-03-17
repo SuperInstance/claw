@@ -6,8 +6,6 @@ use crate::social::{SocialError, SocialResult, SocialAgentMetadata};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// Social role for an agent
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]

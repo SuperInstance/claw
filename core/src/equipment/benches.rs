@@ -22,27 +22,15 @@
 //! - **Memory Access**: <100ns for L1, <1μs for L2, <10μs for L3
 //! - **Muscle Memory Extraction**: <100ms for 1000 triggers
 
-use std::time::Instant;
-
 // Note: Criterion is only available in dev-dependencies, so benchmarks
 // are conditionally compiled. Use `cargo bench` to run benchmarks.
 #[cfg(feature = "bench")]
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 
 use crate::equipment::{
-    EquipmentSlot, EquipmentCost, EquipmentManager,
-    SimpleMemoryEquipment, ReasoningEngine, TripartiteConsensus,
-    TileInterface, Quantizer, SwarmCoordinator,
-    slots::{
-        MemoryEquipment, ReasoningEquipment, ConsensusEquipment,
-        SpreadsheetEquipment, DistillationEquipment, CoordinationEquipment,
-    },
-    monitoring::{BenchmarkResults, MetricsUpdate},
-    ResourceMonitor,
+    EquipmentManager,
+    slots::MemoryEquipment,
 };
-
-// Import the correct TriggerPayload (struct from ws::protocol, not enum from messages)
-use crate::ws::protocol::TriggerPayload;
 
 /// Benchmark equipment equip time
 #[cfg(feature = "bench")]

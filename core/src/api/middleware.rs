@@ -8,7 +8,7 @@ use axum::{
     extract::Request,
     middleware::Next,
     response::Response,
-    http::{HeaderMap, HeaderValue, StatusCode, self},
+    http::{HeaderMap, HeaderValue},
 };
 use std::time::{Duration, Instant};
 
