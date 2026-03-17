@@ -78,7 +78,7 @@ impl MockSpreadsheet {
             };
 
             // Send to claw core
-            self.claw_core.send_message(trigger).await?;
+            self.claw_core.send_message(trigger).await.map_err(|e| e.to_string())?;
             Ok(())
         } else {
             Err(format!("Cell {} not found", reference))
@@ -317,7 +317,7 @@ mod tests {
         let result = spreadsheet.claw_core().add_relationship(
             "agent-A1".to_string(),
             "agent-A2".to_string(),
-            claw_core::SocialRelationship::CoWorker,
+            claw_core::SocialRelation::CoWorker,
         ).await;
 
         assert!(result.is_ok());
@@ -362,11 +362,8 @@ mod tests {
         // Start the core
         spreadsheet.start().await.unwrap();
 
-        // Update all cells concurrently
-        let mut handles = vec![];
+        // Update all cells sequentially (can't use concurrent updates with mutable borrow)
         for i in 1..=5 {
-            let spreadsheet_ref = &spreadsheet; // This won't work, need to use Arc<Mutex<>>
-            // For this test, we'll just update sequentially
             let result = spreadsheet.update_cell(
                 &format!("A{}", i),
                 serde_json::json!(i * 10)
