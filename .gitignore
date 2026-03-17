@@ -18,6 +18,12 @@ __pycache__/
 ui/src/ui/__screenshots__/
 ui/playwright-report/
 ui/test-results/
+
+# Rust build artifacts
+core/target/
+**/target/
+*.lock
+!Cargo.lock
 packages/dashboard-next/.next/
 packages/dashboard-next/out/
 
@@ -44,7 +50,8 @@ apps/macos/.build-local/
 apps/macos/.swiftpm/
 apps/shared/MoltbotKit/.swiftpm/
 apps/shared/OpenClawKit/.swiftpm/
-/Core/
+# Core/ is for iOS - use exact case to avoid matching rust core/ on Windows
+/apps/ios/Core/
 apps/ios/*.xcodeproj/
 apps/ios/*.xcworkspace/
 apps/ios/.swiftpm/
