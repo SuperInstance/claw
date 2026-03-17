@@ -10,6 +10,28 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", content = "data")]
 pub enum WsMessage {
+    /// Client authentication request (JWT or API key)
+    Authenticate {
+        /// JWT token (mutually exclusive with api_key)
+        token: Option<String>,
+        /// API key (mutually exclusive with token)
+        api_key: Option<String>,
+    },
+
+    /// Server authentication response
+    Authenticated {
+        client_id: String,
+        user_id: String,
+        scopes: Vec<String>,
+        expires_at: Option<u64>,
+    },
+
+    /// Server authentication failure
+    AuthFailed {
+        error: String,
+        code: u16,
+    },
+
     /// Client request to create a new agent
     CreateAgent {
         id: String,
@@ -106,6 +128,24 @@ pub enum WsMessage {
         server_version: String,
         client_id: String,
     },
+
+    /// Subscribe to agent events
+    Subscribe {
+        agent_ids: Vec<String>,
+        event_types: Vec<String>,
+    },
+
+    /// Unsubscribe from agent events
+    Unsubscribe {
+        agent_ids: Vec<String>,
+        event_types: Vec<String>,
+    },
+
+    /// Subscription confirmation
+    Subscribed {
+        agent_ids: Vec<String>,
+        event_types: Vec<String>,
+    },
 }
 
 /// Agent creation configuration
@@ -172,6 +212,9 @@ impl WsMessage {
     /// Get message ID
     pub fn id(&self) -> Option<&str> {
         match self {
+            WsMessage::Authenticate { .. } => None,
+            WsMessage::Authenticated { .. } => None,
+            WsMessage::AuthFailed { .. } => None,
             WsMessage::CreateAgent { id, .. } => Some(id),
             WsMessage::AgentCreated { id, .. } => Some(id),
             WsMessage::QueryAgent { id, .. } => Some(id),
@@ -186,29 +229,47 @@ impl WsMessage {
             WsMessage::Error { id, .. } => Some(id),
             WsMessage::Heartbeat { .. } => None,
             WsMessage::Connected { .. } => None,
+            WsMessage::Subscribe { .. } => None,
+            WsMessage::Unsubscribe { .. } => None,
+            WsMessage::Subscribed { .. } => None,
         }
     }
 
     /// Check if message is a request (client -> server)
     pub fn is_request(&self) -> bool {
         matches!(self,
+            WsMessage::Authenticate { .. } |
             WsMessage::CreateAgent { .. } |
             WsMessage::QueryAgent { .. } |
             WsMessage::TriggerAgent { .. } |
-            WsMessage::CancelAgent { .. }
+            WsMessage::CancelAgent { .. } |
+            WsMessage::Subscribe { .. } |
+            WsMessage::Unsubscribe { .. }
         )
     }
 
     /// Check if message is a notification (server -> client)
     pub fn is_notification(&self) -> bool {
         matches!(self,
+            WsMessage::Authenticated { .. } |
+            WsMessage::AuthFailed { .. } |
             WsMessage::AgentCreated { .. } |
             WsMessage::AgentStateChanged { .. } |
             WsMessage::ReasoningChunk { .. } |
             WsMessage::EquipmentChanged { .. } |
             WsMessage::AgentTriggered { .. } |
             WsMessage::AgentCancelled { .. } |
-            WsMessage::Connected { .. }
+            WsMessage::Connected { .. } |
+            WsMessage::Subscribed { .. }
+        )
+    }
+
+    /// Check if message is an authentication message
+    pub fn is_auth(&self) -> bool {
+        matches!(self,
+            WsMessage::Authenticate { .. } |
+            WsMessage::Authenticated { .. } |
+            WsMessage::AuthFailed { .. }
         )
     }
 
@@ -271,5 +332,84 @@ mod tests {
         assert!(!msg.is_request());
         assert!(!msg.is_notification());
         assert!(msg.id().is_none());
+    }
+
+    #[test]
+    fn test_authenticate_message() {
+        let msg = WsMessage::Authenticate {
+            token: Some("test.jwt.token".to_string()),
+            api_key: None,
+        };
+
+        assert!(msg.is_request());
+        assert!(msg.is_auth());
+        assert!(msg.id().is_none());
+
+        let json = msg.to_json().unwrap();
+        assert!(json.contains(r#""type":"Authenticate"#));
+    }
+
+    #[test]
+    fn test_authenticate_with_api_key() {
+        let msg = WsMessage::Authenticate {
+            token: None,
+            api_key: Some("claw_live_test123".to_string()),
+        };
+
+        let json = msg.to_json().unwrap();
+        let deserialized = WsMessage::from_json(&json).unwrap();
+
+        assert_eq!(msg, deserialized);
+    }
+
+    #[test]
+    fn test_authenticated_response() {
+        let msg = WsMessage::Authenticated {
+            client_id: "client-123".to_string(),
+            user_id: "user-456".to_string(),
+            scopes: vec!["agent:read".to_string(), "agent:write".to_string()],
+            expires_at: Some(1234567890),
+        };
+
+        assert!(msg.is_notification());
+        assert!(msg.is_auth());
+    }
+
+    #[test]
+    fn test_auth_failed_response() {
+        let msg = WsMessage::AuthFailed {
+            error: "Invalid credentials".to_string(),
+            code: 401,
+        };
+
+        assert!(msg.is_notification());
+        assert!(msg.is_auth());
+
+        let json = msg.to_json().unwrap();
+        assert!(json.contains(r#""type":"AuthFailed"#));
+        assert!(json.contains("401"));
+    }
+
+    #[test]
+    fn test_subscribe_message() {
+        let msg = WsMessage::Subscribe {
+            agent_ids: vec!["agent-1".to_string(), "agent-2".to_string()],
+            event_types: vec!["state_change".to_string(), "reasoning".to_string()],
+        };
+
+        assert!(msg.is_request());
+        let json = msg.to_json().unwrap();
+        let deserialized = WsMessage::from_json(&json).unwrap();
+        assert_eq!(msg, deserialized);
+    }
+
+    #[test]
+    fn test_subscribed_response() {
+        let msg = WsMessage::Subscribed {
+            agent_ids: vec!["agent-1".to_string()],
+            event_types: vec!["state_change".to_string()],
+        };
+
+        assert!(msg.is_notification());
     }
 }

@@ -27,11 +27,6 @@
 #[cfg(feature = "bench")]
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 
-use crate::equipment::{
-    EquipmentManager,
-    slots::MemoryEquipment,
-};
-
 /// Benchmark equipment equip time
 #[cfg(feature = "bench")]
 fn bench_equip(c: &mut Criterion) {
@@ -335,7 +330,12 @@ criterion_main!(benches);
 #[cfg(test)]
 mod benchmark_tests {
     use super::*;
-    use std::time::Duration;
+    use crate::equipment::{
+        EquipmentManager, EquipmentSlot, EquipmentCost,
+        slots::MemoryEquipment,
+        monitoring::{ResourceMonitor, MetricsUpdate},
+    };
+    use std::time::{Duration, Instant};
 
     #[test]
     fn test_equip_performance_target() {

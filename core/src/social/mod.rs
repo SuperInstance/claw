@@ -41,7 +41,6 @@ pub use relationships::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use thiserror::Error;
 
 /// Social coordination errors

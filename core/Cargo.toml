@@ -54,6 +54,11 @@ tokio-stream = "0.1"
 # Error handling
 anyhow = "1.0"
 
+# Cryptography for API keys
+sha2 = "0.10"
+base64 = "0.21"
+hex = "0.4"
+
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = "0.5"

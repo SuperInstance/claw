@@ -6,15 +6,16 @@
 use std::collections::HashMap;
 
 use crate::equipment::{
-    EquipmentSlot, EquipmentManager,
+    Equipment, EquipmentSlot, EquipmentManager,
     slots::*,
-    monitoring::{ResourceMonitor, HealthStatus},
-    loading::ResourceLimits,
-    muscle_memory::MuscleMemorySystem,
+    monitoring::{ResourceMonitor, HealthStatus, MetricsUpdate},
+    loading::{ResourceLimits, EquipmentLoader},
+    muscle_memory::{MuscleMemorySystem, TriggerContext},
     hierarchical_memory::HierarchicalMemory,
 };
 use crate::ws::protocol::TriggerPayload;
-use crate::messages::TriggerPayload as MsgTriggerPayload;
+use crate::messages::{Message, TriggerPayload as MsgTriggerPayload};
+use crate::agent::{Agent, AgentConfig, MinimalAgent};
 
 /// Create a test trigger payload
 fn create_test_payload() -> TriggerPayload {
