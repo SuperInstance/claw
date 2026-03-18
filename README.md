@@ -5,10 +5,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![docs](https://img.shields.io/badge/docs-rigorous-blue)](docs/)
 [![Rust](https://img.shields.io/badge/rust-1.85%2B-orange)](https://www.rust-lang.org/)
-[![Tests](https://img.shields.io/badge/tests-117%20passing-success)](https://github.com/SuperInstance/claw)
+[![Tests](https://img.shields.io/badge/tests-163%20passing-success)](https://github.com/SuperInstance/claw)
 
 **Repository:** https://github.com/SuperInstance/claw
-**Status:** Research Release - Core engine implemented with 117 passing tests
+**Status:** Research Release - Core engine implemented with 163 passing tests
 **Branch:** `main`
 
 ---
@@ -19,7 +19,7 @@ Claw is a **minimal cellular agent engine** built in Rust that enables spreadshe
 
 **Core Innovation:** Actor Model architecture where each spreadsheet cell = one agent, with message-driven communication, isolated execution, and dynamic equipment system for modular capabilities.
 
-**Current Status:** Research release with working Rust implementation (3,862 lines), 117 passing tests, and documented architecture. Integration with spreadsheet platforms in progress.
+**Current Status:** Research release with working Rust implementation (~15,000 lines), 163 passing tests, and documented architecture. Integration with spreadsheet platforms in progress.
 
 ---
 
@@ -137,7 +137,7 @@ graph TB
 
 ### Core Components
 
-**1. Core Loop (~500 lines)**
+**1. Core Loop (~420 lines)**
 - Main event loop for agent processing
 - Trigger checking and event routing
 - State management and persistence
@@ -164,6 +164,129 @@ Multi-agent coordination patterns:
 - **Peer**: Equal coordination
 - **Delegate**: Task delegation
 - **Observer**: Monitoring relationships
+
+### Agent Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: Agent Created
+    Idle --> Processing: Trigger Received
+    Processing --> Equipping: Need Equipment
+    Equipping --> Processing: Equipment Ready
+    Processing --> Idle: Processing Complete
+    Processing --> Error: Processing Failed
+    Error --> Idle: Error Recovered
+    Idle --> Stopped: Stop Command
+    Stopped --> [*]: Cleanup Complete
+
+    note right of Processing
+        Uses equipped modules:
+        - Memory for state
+        - Reasoning for decisions
+        - Consensus for coordination
+    end note
+```
+
+### Equipment System Flow
+
+```mermaid
+flowchart LR
+    subgraph Decision["Cost/Benefit Analysis"]
+        A[Trigger Received] --> B{Equipment Needed?}
+    end
+
+    subgraph Equipment["Equipment Lifecycle"]
+        B -->|Yes| C[Equip Module]
+        C --> D[Process Task]
+        D --> E{Still Useful?}
+        E -->|Yes| D
+        E -->|No| F[Unequip Module]
+        F --> G[Extract Muscle Memory]
+        G --> H[Store Triggers]
+    end
+
+    subgraph Memory["Muscle Memory"]
+        H --> I[Pattern: low_confidence]
+        H --> J[Pattern: high_complexity]
+        I --> K[Auto Re-equip Trigger]
+        J --> K
+    end
+
+    B -->|No| L[Process Without Equipment]
+
+    style C fill:#90EE90
+    style F fill:#FFB6C1
+    style G fill:#87CEEB
+```
+
+### Social Coordination Patterns
+
+```mermaid
+graph TB
+    subgraph MasterSlave["Master-Slave Pattern"]
+        M1[Master Agent] --> S1[Slave 1]
+        M1 --> S2[Slave 2]
+        M1 --> S3[Slave 3]
+        S1 --> M1: Result
+        S2 --> M1: Result
+        S3 --> M1: Result
+    end
+
+    subgraph CoWorker["Co-Worker Pattern"]
+        W1[Worker A] <--> W2[Worker B]
+        W1 <--> W3[Worker C]
+        W2 <--> W3
+    end
+
+    subgraph Consensus["Consensus Voting"]
+        V1[Agent 1] --> V1V[Vote: Yes]
+        V2[Agent 2] --> V2V[Vote: Yes]
+        V3[Agent 3] --> V3V[Vote: No]
+        V1V & V2V & V3V --> C[Consensus Engine]
+        C --> R[Decision: Majority]
+    end
+
+    style M1 fill:#FFD700
+    style C fill:#90EE90
+```
+
+### API Request Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as REST API
+    participant Core as ClawCore
+    participant Agent
+    participant Equip as Equipment
+
+    Client->>API: POST /api/v1/agents
+    API->>Core: add_agent(config)
+    Core->>Agent: new(config)
+    Agent-->>Core: Agent Created
+    Core-->>API: Success
+    API-->>Client: 201 Created + agent_id
+
+    Client->>API: POST /api/v1/agents/{id}/trigger
+    API->>Core: send_message(Trigger)
+    Core->>Agent: process(Trigger)
+    Agent->>Equip: process(payload)
+    Equip-->>Agent: Result
+    Agent-->>Core: ProcessingResult
+    Core-->>API: Success
+    API-->>Client: 200 OK + Result
+```
+
+### Test Coverage Summary
+
+```mermaid
+pie title Test Distribution (163 total)
+    "Unit Tests (core)" : 128
+    "API Integration" : 13
+    "Core Integration" : 7
+    "Spreadsheet Integration" : 14
+    "Doc Tests" : 1
+```
 
 ---
 
@@ -251,10 +374,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 | Operation | Target | Current | Status |
 |-----------|--------|---------|--------|
-| Core Loop Size | ~500 lines | ~400 lines | ✅ Achieved |
-| Trigger Latency | <100ms | ~10ms | ✅ Achieved |
-| Memory per Agent | <10MB | ~2MB | ✅ Achieved |
-| Test Coverage | 80%+ | 117 tests passing | ✅ Achieved |
+| Core Loop Size | ~500 lines | ~420 lines | Achieved |
+| Trigger Latency | <100ms | ~10ms | Achieved |
+| Memory per Agent | <10MB | ~2MB | Achieved |
+| Test Coverage | 80%+ | 163 tests passing | Achieved |
 
 **System configuration:**
 - CPU: Modern multi-core processor
@@ -622,10 +745,10 @@ If you use this work in your research, please cite:
 
 ### Phase 4: Production Readiness (Current)
 
-- ✅ Core loop implementation (407 lines)
-- ✅ Equipment system (6/6 slots)
-- ✅ Social coordination (5/5 patterns)
-- ✅ 117 passing tests
+- Core loop implementation (~420 lines)
+- Equipment system (6/6 slots)
+- Social coordination (5/5 patterns)
+- 163 passing tests
 - ⏳ Spreadsheet platform integration
 - ⏳ ML pipeline completion
 - ⏳ Production deployment
