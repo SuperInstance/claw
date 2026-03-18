@@ -10,3 +10,8 @@
 export function shouldSkipRespawn() {
   return false;
 }
+
+// Alias for backward compatibility
+export function shouldSkipRespawnForArgv() {
+  return shouldSkipRespawn();
+}

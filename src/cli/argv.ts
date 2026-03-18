@@ -18,3 +18,8 @@ export function isRootVersionInvocation() {
 export function isHelpInvocation() {
   return false;
 }
+
+// Alias for backward compatibility
+export function getCommandPathWithRootOptions() {
+  return '';
+}
