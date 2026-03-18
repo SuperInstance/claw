@@ -4,7 +4,7 @@ A minimal, performant cellular agent engine for spreadsheet integration, built o
 
 ## Overview
 
-Claw Core is the foundational engine for intelligent cellular agents in spreadsheets. It implements a minimal ~500-line core event loop that handles agent lifecycle, message processing, equipment management, and social coordination.
+Claw Core is the **minimal MVP** (<5,000 LOC) cellular agent engine that provides essential agent functionality. For advanced features like social coordination, seed learning, WebSocket communication, and GPU acceleration, see [claw-extensions](https://github.com/SuperInstance/claw-extensions).
 
 ## Architecture
 
@@ -30,29 +30,37 @@ Cellular agents with:
 - Equipment slots
 - Reasoning capabilities
 
-### 3. Equipment System (`EquipmentManager`)
-Dynamic modular capabilities:
-- **MEMORY** - State persistence
-- **REASONING** - Decision making
-- **CONSENSUS** - Multi-agent agreement
-- **SPREADSHEET** - Cell integration
-- **DISTILLATION** - Model compression
-- **COORDINATION** - Multi-agent orchestration
+### 3. Equipment System
+**MVP: Single Memory slot only**
 
-### 4. Trigger System (`TriggerSystem`)
+Claw Core provides a simplified equipment system with **one slot** (Memory) for basic state persistence.
+
+**For advanced equipment (6 slots with hot-swapping, muscle memory, cost/benefit analysis), use [claw-extensions](https://github.com/SuperInstance/claw-extensions):**
+- MEMORY - Hierarchical memory with L0/L1/L2 caching
+- REASONING - Escalation engine for complex decisions
+- CONSENSUS - Tripartite consensus for multi-agent agreement
+- SPREADSHEET - Tile interface for spreadsheet integration
+- DISTILLATION - Model compression and optimization
+- COORDINATION - Swarm coordination for parallel processing
+
+### 4. Trigger System
 Cell-based activation:
 - Data triggers (cell changes)
 - Periodic triggers (timers)
 - Formula triggers (formula results)
 - External triggers (external events)
 
-### 5. Social Coordinator (`SocialCoordinator`)
-Multi-agent patterns:
-- Master-Slave
-- Co-Worker
-- Peer
-- Delegate
-- Observer
+### 5. REST API
+**MVP: 5 endpoints only**
+
+Claw Core provides a simple REST API for basic agent management:
+- `POST /api/v1/agents` - Create agent
+- `GET /api/v1/agents/:id` - Get agent state
+- `PUT /api/v1/agents/:id` - Update agent
+- `DELETE /api/v1/agents/:id` - Delete agent
+- `POST /api/v1/agents/:id/triggers` - Add trigger
+
+**For advanced features (WebSocket, social coordination endpoints, equipment hot-swap), use [claw-extensions](https://github.com/SuperInstance/claw-extensions).**
 
 ## Quick Start
 
@@ -293,9 +301,51 @@ This project is part of the SuperInstance ecosystem. See the main repository for
 
 MIT
 
+## Advanced Features
+
+Need more than the MVP? Check out **[claw-extensions](https://github.com/SuperInstance/claw-extensions)** for:
+
+- **Advanced Equipment** - 6 slots with hot-swapping
+- **Social Coordination** - Master-slave, co-worker patterns
+- **Seed Learning** - ML behavior optimization
+- **Bot Automation** - Simple loops without ML
+- **WebSocket Server** - Real-time communication
+- **GPU Acceleration** - CUDA/WGPU support
+- **Advanced Monitoring** - Metrics and telemetry
+
+### Quick Extension Example
+
+```toml
+# Add to Cargo.toml
+claw-extensions = { version = "0.1", features = ["equipment", "social"] }
+```
+
+```rust
+use claw_core::{Agent, MinimalAgent, AgentConfig};
+use claw_extensions::equipment::EquipmentManager;
+
+// Create core agent
+let config = AgentConfig {
+    id: "my-agent".to_string(),
+    cell_ref: "A1".to_string(),
+    model: "deepseek-chat".to_string(),
+    equipment: vec![],
+    config: Default::default(),
+};
+
+let mut agent = MinimalAgent::new(config);
+
+// Add extensions
+let mut equipment_mgr = EquipmentManager::new();
+equipment_mgr.equip(Box::new(HierarchicalMemory::new())).await?;
+```
+
+See [claw-extensions Integration Guide](https://github.com/SuperInstance/claw-extensions/blob/main/INTEGRATION_GUIDE.md) for details.
+
 ## Links
 
 - **Main Repository**: https://github.com/SuperInstance/claw
+- **Extensions**: https://github.com/SuperInstance/claw-extensions
 - **Documentation**: https://docs.rs/claw-core
 - **Examples**: https://github.com/SuperInstance/claw/tree/main/core/examples
 

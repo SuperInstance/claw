@@ -4,7 +4,7 @@
 //! including master-slave, co-worker, and consensus patterns.
 
 use claw_core::{
-    agent::{MinimalAgent, AgentConfig},
+    agent::{MinimalAgent, AgentConfig, Agent},
     equipment::EquipmentSlot,
 };
 use std::collections::HashMap;
@@ -29,6 +29,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n--- Example 3: Consensus Pattern ---\n");
     consensus_example().await?;
 
+    // Example 4: Peer Coordination
+    println!("\n--- Example 4: Peer Coordination ---\n");
+    peer_coordination_example().await?;
+
     println!("\n=== Social Coordination Patterns Complete ===");
     Ok(())
 }
@@ -47,16 +51,16 @@ async fn master_slave_example() -> Result<(), Box<dyn std::error::Error>> {
         equipment: vec![EquipmentSlot::Coordination],
         config: HashMap::new(),
     };
-    let mut master = MinimalAgent::new(master_config);
+    let master = MinimalAgent::new(master_config);
 
     println!("Creating slave agents...");
-    let slave_ids = vec![
+    let slave_ids: Vec<String> = vec![
         create_slave("B1".to_string()).await?,
         create_slave("B2".to_string()).await?,
         create_slave("B3".to_string()).await?,
     ];
 
-    println!("Master {} has {} slaves", master_id, slave_ids.len());
+    println!("Master {} has {} slaves", master_agent_id(&master), slave_ids.len());
 
     // Master distributes task to slaves
     let task = "Process data chunk";
@@ -93,7 +97,7 @@ async fn co_worker_example() -> Result<(), Box<dyn std::error::Error>> {
         equipment: vec![EquipmentSlot::Memory],
         config: HashMap::new(),
     };
-    let mut worker_a = MinimalAgent::new(worker_a_config);
+    let worker_a = MinimalAgent::new(worker_a_config);
 
     let worker_b_id = Uuid::new_v4().to_string();
     let worker_b_config = AgentConfig {
@@ -103,10 +107,10 @@ async fn co_worker_example() -> Result<(), Box<dyn std::error::Error>> {
         equipment: vec![EquipmentSlot::Reasoning],
         config: HashMap::new(),
     };
-    let mut worker_b = MinimalAgent::new(worker_b_config);
+    let worker_b = MinimalAgent::new(worker_b_config);
 
-    println!("Worker A: {} (Memory specialist)", worker_a_id);
-    println!("Worker B: {} (Reasoning specialist)", worker_b_id);
+    println!("Worker A: {} (Memory specialist)", get_agent_id(&worker_a));
+    println!("Worker B: {} (Reasoning specialist)", get_agent_id(&worker_b));
 
     // Workers collaborate on a task
     let task = "Analyze complex pattern";
@@ -156,7 +160,7 @@ async fn consensus_example() -> Result<(), Box<dyn std::error::Error>> {
             config: HashMap::new(),
         };
         let agent = MinimalAgent::new(config);
-        println!("  → Agent {} ({})", id, model);
+        println!("  → Agent {} ({})", get_agent_id(&agent), model);
         agents.push(agent);
     }
 
@@ -167,7 +171,7 @@ async fn consensus_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut votes = Vec::new();
     for (i, agent) in agents.iter().enumerate() {
         let vote = simulate_agent_vote(agent, decision_topic, i).await?;
-        let agent_id = agent.id();
+        let agent_id = get_agent_id(agent);
         println!("  → Agent {}: {}", agent_id, vote);
         votes.push(vote);
     }
@@ -181,6 +185,45 @@ async fn consensus_example() -> Result<(), Box<dyn std::error::Error>> {
     let agree_count = votes.iter().filter(|v| **v == consensus).count();
     let agreement_pct = (agree_count as f64 / votes.len() as f64) * 100.0;
     println!("Agreement: {}/{} ({:.1}%)", agree_count, votes.len(), agreement_pct);
+
+    Ok(())
+}
+
+/// Peer Coordination Example
+///
+/// Demonstrates peer-to-peer coordination where agents
+/// communicate directly without a central coordinator.
+async fn peer_coordination_example() -> Result<(), Box<dyn std::error::Error>> {
+    println!("Creating peer agents...");
+
+    let mut peers = Vec::new();
+    for i in 0..4 {
+        let id = Uuid::new_v4().to_string();
+        let config = AgentConfig {
+            id: id.clone(),
+            cell_ref: format!("E{}", i + 1),
+            model: "deepseek-chat".to_string(),
+            equipment: vec![],
+            config: HashMap::new(),
+        };
+        let agent = MinimalAgent::new(config);
+        println!("  → Peer {}: {}", i, get_agent_id(&agent));
+        peers.push(agent);
+    }
+
+    println!("\nSimulating peer-to-peer communication...");
+
+    // Simulate peer message passing
+    let message = "Coordinate task allocation";
+    println!("Initial message: '{}'", message);
+
+    for (i, peer) in peers.iter().enumerate() {
+        let response = format!("Peer {} received: {}", i, message);
+        println!("  → {}: {}", get_agent_id(peer), response);
+        sleep(Duration::from_millis(25)).await;
+    }
+
+    println!("\nPeer coordination complete!");
 
     Ok(())
 }
@@ -251,16 +294,12 @@ fn calculate_consensus(votes: &[String]) -> String {
         .unwrap_or_else(|| "No consensus".to_string())
 }
 
-// Extension traits for MinimalAgent
-
-trait AgentSocial {
-    /// Get agent ID
-    fn id(&self) -> String;
+/// Helper function to get agent ID
+fn get_agent_id(agent: &MinimalAgent) -> String {
+    agent.id().to_owned()
 }
 
-impl AgentSocial for MinimalAgent {
-    fn id(&self) -> String {
-        // Return a placeholder ID for the example
-        Uuid::new_v4().to_string()
-    }
+/// Helper function to get master agent ID
+fn master_agent_id(agent: &MinimalAgent) -> String {
+    agent.id().to_owned()
 }
