@@ -1,0 +1,221 @@
+//! Equipment Hot-Swapping Example
+//!
+//! This example demonstrates the dynamic equipment system where agents can
+//! equip and unequip modules based on their needs. The system performs
+//! cost/benefit analysis and extracts muscle memory triggers for future use.
+
+use claw_core::{
+    agent::{MinimalAgent, AgentConfig},
+    equipment::{
+        EquipmentSlot, Equipment, MemoryEquipment, ReasoningEquipment,
+        ConsensusEquipment, MuscleMemoryTrigger,
+    },
+};
+use std::collections::HashMap;
+use tokio::time::{sleep, Duration};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize logging
+    tracing_subscriber::fmt::init();
+
+    println!("=== Equipment Hot-Swapping Example ===\n");
+
+    // Create an agent with minimal equipment
+    let config = AgentConfig {
+        id: uuid::Uuid::new_v4(),
+        cell_ref: "A1".to_string(),
+        model: "deepseek-chat".to_string(),
+        equipment: vec![EquipmentSlot::Memory],
+        config: HashMap::new(),
+    };
+
+    let mut agent = MinimalAgent::new(config.clone());
+    println!("Created agent {} with initial equipment: {:?}", config.id, agent.get_equipped());
+
+    // Simulate processing different types of tasks
+    println!("\n--- Processing Tasks ---\n");
+
+    // Task 1: Simple data monitoring (no additional equipment needed)
+    println!("Task 1: Simple data monitoring");
+    let result = process_task(&mut agent, "monitor_temperature", 25.5).await?;
+    println!("Result: {:?}\n", result);
+
+    // Task 2: Complex decision making (requires reasoning)
+    println!("Task 2: Complex decision making");
+    if !agent.is_equipped(&EquipmentSlot::Reasoning) {
+        println!("Equipping Reasoning module...");
+        agent.equip(EquipmentSlot::Reasoning).await?;
+        println!("Current equipment: {:?}", agent.get_equipped());
+    }
+    let result = process_task(&mut agent, "anomaly_detection", vec![1, 2, 3, 100, 5]).await?;
+    println!("Result: {:?}\n", result);
+
+    // Task 3: Multi-agent consensus (requires consensus module)
+    println!("Task 3: Multi-agent consensus");
+    if !agent.is_equipped(&EquipmentSlot::Consensus) {
+        println!("Equipping Consensus module...");
+        agent.equip(EquipmentSlot::Consensus).await?;
+        println!("Current equipment: {:?}", agent.get_equipped());
+    }
+    let result = process_task(&mut agent, "consensus_vote", "Should we proceed?").await?;
+    println!("Result: {:?}\n", result);
+
+    // Task 4: Back to simple task (unequip unnecessary equipment)
+    println!("Task 4: Back to simple monitoring");
+    println!("Analyzing equipment usage...");
+    let muscle_memory = agent.analyze_and_unequip().await?;
+    println!("Unequipped modules. Muscle memory triggers extracted:");
+    for trigger in muscle_memory {
+        println!("  - {:?} when: {}", trigger.equipment_slot, trigger.trigger_condition);
+    }
+    println!("Current equipment: {:?}", agent.get_equipped());
+
+    // Task 5: Trigger that requires re-equipping based on muscle memory
+    println!("\nTask 5: Complex task again (muscle memory auto-requip)");
+    let result = process_task(&mut agent, "complex_analysis", "data").await?;
+    println!("Result: {:?}\n", result);
+
+    println!("=== Equipment Hot-Swapping Complete ===");
+    Ok(())
+}
+
+/// Process a task with the agent
+async fn process_task<T: serde::Serialize>(
+    agent: &mut MinimalAgent,
+    task_type: &str,
+    input: T,
+) -> Result<String, Box<dyn std::error::Error>> {
+    // Simulate task processing
+    sleep(Duration::from_millis(100)).await;
+
+    // Create a simple trigger
+    let trigger = format!(
+        r#"{{"type": "{}", "input": {}, "timestamp": "{}"}})"#,
+        task_type,
+        serde_json::to_string(&input)?,
+        chrono::Utc::now().to_rfc3339()
+    );
+
+    // Process the trigger
+    let result = agent.process(&trigger).await?;
+
+    Ok(result)
+}
+
+/// Extension trait for MinimalAgent to demonstrate hot-swapping
+trait EquipmentHotSwap {
+    /// Check if equipment is equipped
+    fn is_equipped(&self, slot: &EquipmentSlot) -> bool;
+
+    /// Get list of equipped slots
+    fn get_equipped(&self) -> Vec<EquipmentSlot>;
+
+    /// Equip a slot
+    fn equip(&mut self, slot: EquipmentSlot) -> Result<(), Box<dyn std::error::Error>>;
+
+    /// Unequip a slot
+    fn unequip(&mut self, slot: &EquipmentSlot) -> Result<(), Box<dyn std::error::Error>>;
+
+    /// Analyze usage and unequip unnecessary equipment, extracting muscle memory
+    fn analyze_and_unequip(&mut self) -> Result<Vec<MuscleMemoryTrigger>, Box<dyn std::error::Error>>;
+}
+
+impl EquipmentHotSwap for MinimalAgent {
+    fn is_equipped(&self, slot: &EquipmentSlot) -> bool {
+        // Check if slot is equipped based on agent state
+        self.get_state().equipment.contains(slot)
+    }
+
+    fn get_equipped(&self) -> Vec<EquipmentSlot> {
+        self.get_state().equipment.clone()
+    }
+
+    fn equip(&mut self, slot: EquipmentSlot) -> Result<(), Box<dyn std::error::Error>> {
+        println!("  → Equipping {:?}...", slot);
+
+        // Simulate equipment loading time
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
+        // In a real implementation, this would load the equipment module
+        println!("  → {:?} equipped successfully", slot);
+
+        Ok(())
+    }
+
+    fn unequip(&mut self, slot: &EquipmentSlot) -> Result<(), Box<dyn std::error::Error>> {
+        println!("  → Unequipping {:?}...", slot);
+
+        // Simulate equipment unloading time
+        std::thread::sleep(std::time::Duration::from_millis(20));
+
+        // Extract muscle memory before unequipping
+        let trigger = extract_muscle_memory(slot);
+        println!("  → Extracted muscle memory: {:?}", trigger);
+
+        println!("  → {:?} unequipped successfully", slot);
+
+        Ok(())
+    }
+
+    fn analyze_and_unequip(&mut self) -> Result<Vec<MuscleMemoryTrigger>, Box<dyn std::error::Error>> {
+        let equipped = self.get_equipped();
+        let mut muscle_memory_triggers = Vec::new();
+
+        // Analyze each equipped slot
+        for slot in equipped {
+            if should_keep_equipped(&slot) {
+                println!("  → Keeping {:?} (frequently used)", slot);
+            } else {
+                println!("  → {:?} not recently used, unequipping", slot);
+                self.unequip(&slot)?;
+                muscle_memory_triggers.push(extract_muscle_memory(&slot));
+            }
+        }
+
+        Ok(muscle_memory_triggers)
+    }
+}
+
+/// Extract muscle memory trigger for an equipment slot
+fn extract_muscle_memory(slot: &EquipmentSlot) -> MuscleMemoryTrigger {
+    match slot {
+        EquipmentSlot::Memory => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "high_memory_usage OR complex_state".to_string(),
+            confidence: 0.85,
+        },
+        EquipmentSlot::Reasoning => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "confidence < 0.8 OR high_complexity".to_string(),
+            confidence: 0.92,
+        },
+        EquipmentSlot::Consensus => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "multi_agent_decision OR voting_required".to_string(),
+            confidence: 0.88,
+        },
+        EquipmentSlot::Spreadsheet => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "cell_access OR formula_execution".to_string(),
+            confidence: 0.95,
+        },
+        EquipmentSlot::Distillation => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "model_compression OR optimization_needed".to_string(),
+            confidence: 0.78,
+        },
+        EquipmentSlot::Coordination => MuscleMemoryTrigger {
+            equipment_slot: slot.clone(),
+            trigger_condition: "parallel_task OR swarm_required".to_string(),
+            confidence: 0.90,
+        },
+    }
+}
+
+/// Determine if equipment should remain equipped based on usage patterns
+fn should_keep_equipped(slot: &EquipmentSlot) -> bool {
+    // In a real implementation, this would analyze usage statistics
+    // For this example, we'll keep Memory and Reasoning equipped
+    matches!(slot, EquipmentSlot::Memory | EquipmentSlot::Reasoning)
+}
