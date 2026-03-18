@@ -46,6 +46,7 @@ pub mod equipment;
 pub mod error;
 pub mod messages;
 pub mod api;
+pub mod monitoring;
 
 // Re-export commonly used types
 pub use agent::{Agent, AgentConfig, AgentState, AgentStatus, MinimalAgent};
@@ -54,6 +55,7 @@ pub use equipment::{Equipment, EquipmentSlot, SimpleMemoryEquipment};
 pub use error::{AgentError, Result};
 pub use messages::{Message, QueryType, TriggerPayload};
 pub use api::{create_router, create_default_state, AppState};
+pub use monitoring::{ClawMetrics, HealthStatus, MonitoringState};
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
