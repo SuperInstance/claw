@@ -76,7 +76,11 @@ pub enum AgentError {
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 
-    /// Social coordination error
+    /// Invalid equipment
+    #[error("Invalid equipment: {0}")]
+    InvalidEquipment(String),
+
+    /// Social coordination error (removed in MVP)
     #[error("Social coordination error: {0}")]
     SocialError(String),
 }

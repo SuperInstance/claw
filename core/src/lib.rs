@@ -1,23 +1,15 @@
-//! # Claw Core - Minimal Cellular Agent Engine
+//! # Claw Core - Minimal Cellular Agent Engine (MVP)
 //!
 //! A minimal, performant cellular agent engine for spreadsheet integration.
 //! Built on the Cell-First Actor Model pattern for efficient, scalable agent processing.
 //!
-//! ## Architecture
+//! ## MVP Architecture
 //!
-//! The core engine is built around the Actor Model pattern where:
-//! - Each spreadsheet cell = one actor (agent)
-//! - Message-driven communication
-//! - Isolated execution with no shared state
-//! - Dynamic equipment system for modular capabilities
-//!
-//! ## Core Components
-//!
-//! - **Core Loop**: ~500-line event loop for processing
+//! The MVP core engine provides:
 //! - **Agents**: Cellular agents with state and behavior
-//! - **Equipment**: Dynamic modular capabilities
+//! - **Memory Equipment**: Single slot for basic state persistence
 //! - **Triggers**: Cell-based activation system
-//! - **Social**: Multi-agent coordination patterns
+//! - **REST API**: Simple CRUD operations
 //!
 //! ## Quick Start
 //!
@@ -33,7 +25,6 @@
 //!         id: "my-agent".to_string(),
 //!         cell_ref: "A1".to_string(),
 //!         model: "gpt-4".to_string(),
-//!         equipment: vec![],
 //!         config: std::collections::HashMap::new(),
 //!     };
 //!
@@ -41,9 +32,6 @@
 //!
 //!     // Start the core loop
 //!     core.start().await?;
-//!
-//!     // Send messages
-//!     // ...
 //!
 //!     // Stop
 //!     core.stop().await?;
@@ -57,22 +45,14 @@ pub mod core;
 pub mod equipment;
 pub mod error;
 pub mod messages;
-pub mod ws;
 pub mod api;
-pub mod social;
 
 // Re-export commonly used types
 pub use agent::{Agent, AgentConfig, AgentState, AgentStatus, MinimalAgent};
-pub use core::{ClawCore, SocialRelation, SocialRelationship};
-pub use equipment::{
-    Equipment, EquipmentManager, EquipmentSlot, MuscleMemoryTrigger,
-    SimpleMemoryEquipment, ReasoningEngine, TripartiteConsensus,
-    TileInterface, Quantizer, SwarmCoordinator,
-    EquipmentCost, EquipmentCostThresholds, ProcessingContext,
-};
+pub use core::ClawCore;
+pub use equipment::{Equipment, EquipmentSlot, SimpleMemoryEquipment};
 pub use error::{AgentError, Result};
 pub use messages::{Message, QueryType, TriggerPayload};
-pub use ws::{WsServer, WsServerConfig, WsMessage};
 pub use api::{create_router, create_default_state, AppState};
 
 /// Library version
