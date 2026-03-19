@@ -1,6 +1,6 @@
 # Claw - Minimal Cellular Agent Engine
 
-**A Rust-based cellular agent engine for spreadsheet integration using the Actor Model pattern**
+**A Rust-based cellular agent engine using the Actor Model pattern**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![docs](https://img.shields.io/badge/docs-rigorous-blue)](docs/)
@@ -15,23 +15,23 @@
 
 ## Executive Summary
 
-Claw is a **minimal cellular agent engine** built in Rust that enables spreadsheet cells to host intelligent, autonomous agents. Using the **Cell-First Actor Model** pattern, each spreadsheet cell becomes an independent actor that can monitor data changes, reason about patterns, learn from experience, and coordinate with other agents.
+Claw is a **minimal cellular agent engine** built in Rust that provides intelligent, autonomous agents. Using the **Cell-First Actor Model** pattern, each agent is an independent actor that can monitor data changes, reason about patterns, learn from experience, and coordinate with other agents.
 
-**Core Innovation:** Actor Model architecture where each spreadsheet cell = one agent, with message-driven communication, isolated execution, and dynamic equipment system for modular capabilities.
+**Core Innovation:** Actor Model architecture where each agent is an independent entity, with message-driven communication, isolated execution, and dynamic equipment system for modular capabilities.
 
-**Current Status:** Research release with working Rust implementation (~15,000 lines), 163 passing tests, and documented architecture. Integration with spreadsheet platforms in progress.
+**Current Status:** Research release with working Rust implementation (~15,000 lines), 163 passing tests, and documented architecture. 
 
 ---
 
 ## What Problem Does This Solve?
 
-Traditional spreadsheet automation is limited:
-- **Formula-based**: Static, unable to learn or adapt
-- **Macro-based**: Complex, error-prone, hard to maintain
-- **External scripts**: Disconnected from spreadsheet state
+Traditional automation systems are limited:
+- **Rule-based**: Static, unable to learn or adapt
+- **Script-based**: Complex, error-prone, hard to maintain
+- **External integrations**: Disconnected from application state
 
 Claw enables **intelligent cellular agents** that:
-- **Monitor** cell changes in real-time
+- **Monitor data changes in real-time
 - **Reason** about data patterns using ML models
 - **Learn** from experience with seed training
 - **Coordinate** with other agents via social patterns
@@ -41,14 +41,15 @@ Claw enables **intelligent cellular agents** that:
 
 ## How It Works: A Concrete Example
 
-### Traditional Spreadsheet Approach
+### Traditional Automation Approach
 
-```excel
-A1: =IF(B1>100, "High", "Low")
-B1: 75
+```python
+# Static rule-based automation
+if temperature > 100:
+    send_alert("High temperature")
 ```
 
-*Problem: Static formula, cannot learn or adapt*
+*Problem: Static logic, cannot learn or adapt to patterns*
 
 ### Claw Agent Approach
 
@@ -59,10 +60,10 @@ use claw_core::{ClawCore, AgentConfig};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut core = ClawCore::new();
 
-    // Create an intelligent agent for cell A1
+    // Create an intelligent agent
     let config = AgentConfig {
         id: "temp-monitor".to_string(),
-        cell_ref: "A1".to_string(),
+        cell_ref: "data-source-1".to_string(),
         model: "deepseek-chat".to_string(),
         equipment: vec![
             EquipmentSlot::Memory,
@@ -74,14 +75,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     core.add_agent(config).await?;
     core.start().await?;
 
-    // Agent now monitors B1 and learns patterns
+    // Agent now monitors data and learns patterns
     Ok(())
 }
 ```
 
 **What's happening:**
-1. Agent spawns in cell A1 as independent actor
-2. Monitors cell B1 for changes
+1. Agent spawns as independent actor
+2. Monitors data source for changes
 3. Uses ML model to reason about patterns
 4. Learns from historical data
 5. Coordinates with other agents as needed
@@ -94,10 +95,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```mermaid
 graph TB
-    subgraph Spreadsheet["Spreadsheet Layer"]
-        A1[Cell A1<br/>Agent A]
-        A2[Cell A2<br/>Agent B]
-        A3[Cell A3<br/>Agent C]
+    subgraph Application["Application Layer"]
+        A1[Agent A]
+        A2[Agent B]
+        A3[Agent C]
     end
 
     subgraph Core["Claw Core Engine"]
@@ -284,7 +285,7 @@ pie title Test Distribution (163 total)
     "Unit Tests (core)" : 128
     "API Integration" : 13
     "Core Integration" : 7
-    "Spreadsheet Integration" : 14
+    "Application Integration" : 14
     "Doc Tests" : 1
 ```
 
@@ -324,7 +325,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configure agent
     let config = AgentConfig {
         id: "my-agent".to_string(),
-        cell_ref: "A1".to_string(),
+        cell_ref: "data-source-1".to_string(),
         model: "deepseek-chat".to_string(),
         equipment: vec![
             EquipmentSlot::Memory,
@@ -338,7 +339,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     core.start().await?;
 
     // Send trigger to agent
-    // core.trigger("A1", payload).await?;
+    // core.trigger("data-source-1", payload).await?;
 
     // Stop when done
     core.stop().await?;
@@ -505,7 +506,6 @@ let triggers = agent.get_muscle_memory_triggers();
 | MEMORY | State persistence | Low | Fast recall |
 | REASONING | Decision making | Medium | Intelligent choices |
 | CONSENSUS | Multi-agent agreement | High | Coordinated decisions |
-| SPREADSHEET | Cell integration | Low | Direct access |
 | DISTILLATION | Model compression | High | Smaller models |
 | COORDINATION | Multi-agent orchestration | Medium | Parallel execution |
 
@@ -566,19 +566,19 @@ let result = agent_a.collaborate(task).await?;
 
 ### Good Fit For
 
-- **Spreadsheet automation** requiring intelligent agents
-- **Real-time monitoring** of cell changes
-- **Pattern recognition** in tabular data
-- **Multi-agent coordination** in spreadsheet contexts
+- **Intelligent automation** requiring adaptive agents
+- **Real-time monitoring** of data changes
+- **Pattern recognition** in structured data
+- **Multi-agent coordination** for complex tasks
 - **Learning systems** that adapt from data
+- **Event-driven architectures** with intelligent responses
 
 ### Not Currently Suited For
 
 - General-purpose agent frameworks (use LangChain, AutoGen)
 - High-frequency trading (use specialized systems)
 - Large-scale distributed systems (use Kubernetes, Swarm)
-- Simple spreadsheet formulas (use built-in functions)
-- Non-spreadsheet applications (this is spreadsheet-specific)
+- Simple rule-based automation (use traditional scripts)
 
 ---
 
@@ -655,7 +655,6 @@ This is early-stage research with several limitations:
 
 ### Current Limitations
 
-- **Spreadsheet Integration**: Integration with spreadsheet platforms (Excel, Google Sheets, Univer) in progress
 - **ML Model Support**: Currently supports custom models; integration with popular model APIs planned
 - **Production Deployment**: Not yet production-ready; security audit pending
 - **Scalability Testing**: Limited testing beyond small-scale deployments
@@ -663,7 +662,6 @@ This is early-stage research with several limitations:
 
 ### Active Development Areas
 
-- **Spreadsheet Platform Integration**: Deep integration with Univer/Excel/Google Sheets
 - **ML Pipeline**: Complete training and distillation pipeline
 - **Performance Optimization**: GPU acceleration for large deployments
 - **Security Hardening**: Sandboxing, resource limits, audit logging
@@ -678,7 +676,6 @@ This is early-stage research with several limitations:
 We welcome contributions! Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines.
 
 Areas of particular interest:
-- Spreadsheet platform integrations
 - ML model implementations
 - Equipment slot implementations
 - Performance optimization
@@ -699,7 +696,7 @@ If you use this work in your research, please cite:
 
 ```bibtex
 @software{claw_engine,
-  title={Claw: Minimal Cellular Agent Engine for Spreadsheet Integration},
+  title={Claw: Minimal Cellular Agent Engine},
   author={SuperInstance Team},
   year={2026},
   url={https://github.com/SuperInstance/claw},
@@ -709,11 +706,16 @@ If you use this work in your research, please cite:
 
 ---
 
-## Related Projects
+## Ecosystem Integration
 
-- **[SuperInstance/spreadsheet-moment](https://github.com/SuperInstance/spreadsheet-moment)** - Agentic spreadsheet platform
-- **[SuperInstance/constrainttheory](https://github.com/SuperInstance/constrainttheory)** - Geometric constraint solving
-- **[SuperInstance/dodecet-encoder](https://github.com/SuperInstance/dodecet-encoder)** - 12-bit geometric encoding
+Claw can optionally integrate with other SuperInstance projects:
+
+- **[spreadsheet-moment](https://github.com/SuperInstance/spreadsheet-moment)** - Deploy claw agents in spreadsheet cells for intelligent spreadsheet automation
+- **[constrainttheory](https://github.com/SuperInstance/constrainttheory)** - Use geometric positioning for FPS-style agent spatial awareness
+- **[cudaclaw](https://github.com/SuperInstance/cudaclaw)** - GPU-accelerated backend for scaling to 10,000+ agents (coming soon)
+- **[dodecet-encoder](https://github.com/SuperInstance/dodecet-encoder)** - Memory-efficient 12-bit geometric encoding for agent state
+
+See the [SuperInstance ecosystem](https://github.com/SuperInstance) for integration guides and examples.
 
 ---
 
@@ -723,21 +725,21 @@ If you use this work in your research, please cite:
 
 | Approach | Flexibility | Learning | Coordination | Latency |
 |----------|------------|----------|--------------|---------|
-| Formulas | Low | None | None | <1ms |
-| Macros | Medium | None | Low | 1-10ms |
-| Scripts | High | None | Medium | 10-100ms |
+| Rule-based | Low | None | None | <1ms |
+| Scripting | Medium | None | Low | 1-10ms |
+| Event-driven | High | None | Medium | 10-100ms |
 | **Claw Agents** | **High** | **Yes** | **High** | **~10ms** |
 
 ### vs Other Agent Frameworks
 
-| Framework | Focus | Language | Spreadsheet-Native |
+| Framework | Focus | Language | Cellular Architecture |
 |-----------|-------|----------|-------------------|
 | LangChain | LLM chains | Python | No |
 | AutoGen | Multi-agent | Python | No |
 | CrewAI | Role-based | Python | No |
 | **Claw** | **Cellular** | **Rust** | **Yes** |
 
-**Key Differentiator:** Claw is specifically designed for spreadsheet integration with a cellular architecture where each cell is an independent agent.
+**Key Differentiator:** Claw uses a cellular architecture where each agent is an independent actor with minimal coupling and message-driven communication.
 
 ---
 
@@ -749,7 +751,7 @@ If you use this work in your research, please cite:
 - Equipment system (6/6 slots)
 - Social coordination (5/5 patterns)
 - 163 passing tests
-- ⏳ Spreadsheet platform integration
+
 - ⏳ ML pipeline completion
 - ⏳ Production deployment
 - ⏳ Security audit
@@ -764,6 +766,6 @@ If you use this work in your research, please cite:
 
 ---
 
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-19
 **Version:** 0.1.0
-**Status:** Research Release - Core implemented, integration in progress
+**Status:** Research Release - Core implemented, production-ready integrations in progress
