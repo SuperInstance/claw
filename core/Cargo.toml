@@ -1,10 +1,23 @@
 [package]
 name = "claw-core"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "Minimal cellular agent engine for spreadsheet integration"
-authors = ["SuperInstance <team@superinstance.dev>"]
+authors = ["SuperInstance Team"]
 license = "MIT"
+repository = "https://github.com/SuperInstance/claw"
+documentation = "https://docs.rs/claw-core"
+homepage = "https://github.com/SuperInstance/claw"
+exclude = [
+    "target/*",
+    "examples/*",
+    "benches/*",
+    "*.md",
+    ".github/*",
+    ".git/*",
+    ".gitignore",
+    ".cargo/*",
+]
 
 [[bin]]
 name = "claw-server"
