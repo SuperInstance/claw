@@ -1,1019 +1,889 @@
-# Claw Core API Reference
+# API Reference
 
-**Version:** 0.1.0
-**Status:** MVP (Minimal Viable Product)
-**Language:** Rust
+**Complete API documentation for the Minimal CLAW Server**
 
 ---
 
-## Table of Contents
+## Base URL
 
-- [Overview](#overview)
-- [Core Types](#core-types)
-- [Agent API](#agent-api)
-- [Equipment API](#equipment-api)
-- [Messages API](#messages-api)
-- [REST API](#rest-api)
-- [WebSocket API](#websocket-api)
-- [Error Handling](#error-handling)
+```
+http://localhost:8080
+```
+
+All endpoints are prefixed with `/api/v1` unless otherwise noted.
 
 ---
 
-## Overview
+## Authentication
 
-Claw Core is a minimal cellular agent engine built on the **Cell-First Actor Model**. It provides:
+**Current Status**: Not implemented in MVP
 
-- **Agents**: Cellular agents with state and behavior
-- **Memory Equipment**: Single slot for basic state persistence
-- **Triggers**: Cell-based activation system
-- **REST API**: Simple CRUD operations
-- **WebSocket**: Real-time agent updates
+The MVP does not require authentication. All endpoints are publicly accessible.
 
-### Architecture
-
-```mermaid
-graph TB
-    Client[Client Application] -->|HTTP| REST[REST API]
-    Client -->|WebSocket| WS[WebSocket Server]
-    REST --> Core[ClawCore]
-    WS --> Core
-    Core --> Agent1[Agent 1]
-    Core --> Agent2[Agent 2]
-    Core --> Agent3[Agent 3]
-    Agent1 --> Memory[Memory Equipment]
-    Agent2 --> Memory
-    Agent3 --> Memory
-```
+**Planned**: API key and JWT authentication will be added in a future round.
 
 ---
 
-## Core Types
+## Response Format
 
-### `AgentStatus`
+All API responses follow this format:
 
-Agent status enum representing the current state of an agent.
-
-```rust
-pub enum AgentStatus {
-    Idle,        // Agent is idle
-    Processing,  // Agent is processing
-    Error(String), // Agent encountered an error
-    Stopped,     // Agent is stopped
-}
-```
-
-**Variants:**
-- `Idle` - Agent is available for work
-- `Processing` - Agent is actively processing a message
-- `Error(String)` - Agent encountered an error with message
-- `Stopped` - Agent has been stopped and won't process new messages
-
----
-
-### `AgentConfig`
-
-Configuration for creating a new agent.
-
-```rust
-pub struct AgentConfig {
-    pub id: String,                              // Unique agent identifier
-    pub cell_ref: String,                        // Spreadsheet cell reference (e.g., "A1")
-    pub model: String,                           // Model name (e.g., "gpt-4")
-    pub config: HashMap<String, serde_json::Value>, // Additional configuration
-}
-```
-
-**Fields:**
-- `id` - Unique identifier for the agent
-- `cell_ref` - Spreadsheet cell reference where agent is located
-- `model` - AI model to use for processing
-- `config` - Additional key-value configuration options
-
-**Example:**
-```rust
-use claw_core::AgentConfig;
-use std::collections::HashMap;
-
-let config = AgentConfig {
-    id: "my-agent".to_string(),
-    cell_ref: "A1".to_string(),
-    model: "gpt-4".to_string(),
-    config: {
-        let mut map = HashMap::new();
-        map.insert("temperature".to_string(), serde_json::json!(0.7));
-        map
-    },
-};
-```
-
----
-
-### `AgentState`
-
-Current state of an agent.
-
-```rust
-pub struct AgentState {
-    pub status: AgentStatus,                     // Current status
-    pub memory: HashMap<String, serde_json::Value>, // Agent memory
-    pub has_memory_equipment: bool,              // Whether memory equipment is equipped
-}
-```
-
-**Fields:**
-- `status` - Current agent status
-- `memory` - Key-value storage for agent state
-- `has_memory_equipment` - Whether memory equipment is currently equipped
-
-**Default:**
-```rust
-impl Default for AgentState {
-    fn default() -> Self {
-        Self {
-            status: AgentStatus::Idle,
-            memory: HashMap::new(),
-            has_memory_equipment: false,
-        }
-    }
-}
-```
-
----
-
-## Agent API
-
-### `Agent` Trait
-
-Core trait that all agents must implement.
-
-```rust
-#[async_trait]
-pub trait Agent: Send + Sync {
-    fn id(&self) -> &str;
-    fn status(&self) -> &AgentStatus;
-    fn state(&self) -> AgentState;
-    async fn process(&mut self, message: Message) -> Result<ProcessingResult>;
-    async fn query(&self, query_type: QueryType) -> Result<serde_json::Value>;
-    async fn equip_memory(&mut self, equipment: Box<dyn Equipment>) -> Result<()>;
-    async fn stop(&mut self) -> Result<()>;
-}
-```
-
-#### Methods
-
-##### `id() -> &str`
-
-Get the agent's unique identifier.
-
-**Returns:** Agent ID as string slice
-
-**Example:**
-```rust
-let agent_id = agent.id();
-assert_eq!(agent_id, "my-agent");
-```
-
----
-
-##### `status() -> &AgentStatus`
-
-Get the agent's current status.
-
-**Returns:** Reference to current `AgentStatus`
-
-**Example:**
-```rust
-let status = agent.status();
-assert_eq!(status, &AgentStatus::Idle);
-```
-
----
-
-##### `state() -> AgentState`
-
-Get a snapshot of the agent's complete state.
-
-**Returns:** Clone of `AgentState`
-
-**Example:**
-```rust
-let state = agent.state();
-println!("Agent status: {:?}", state.status);
-println!("Memory items: {}", state.memory.len());
-```
-
----
-
-##### `process(&mut self, message: Message) -> Result<ProcessingResult>`
-
-Process a message and return the result.
-
-**Parameters:**
-- `message` - The message to process
-
-**Returns:** `Result<ProcessingResult>` - Processing result or error
-
-**Errors:**
-- `AgentError::UnsupportedMessage` - Message type not supported
-- `AgentError::ProcessingError` - Error during processing
-
-**Example:**
-```rust
-use claw_core::messages::{Message, TriggerPayload};
-
-let message = Message::Trigger {
-    payload: TriggerPayload::Data {
-        cell_ref: "A1".to_string(),
-        new_value: serde_json::json!(42),
-        old_value: serde_json::json!(null),
-    }
-};
-
-let result = agent.process(message).await?;
-println!("Processing time: {}ms", result.processing_time_ms);
-```
-
----
-
-##### `query(&self, query_type: QueryType) -> Result<serde_json::Value>`
-
-Query the agent for specific information.
-
-**Parameters:**
-- `query_type` - Type of query to perform
-
-**Returns:** `Result<serde_json::Value>` - Query result or error
-
-**Query Types:**
-- `QueryType::State` - Get agent state
-- `QueryType::Reasoning` - Get reasoning information (MVP: placeholder)
-- `QueryType::Learning` - Get learning information (MVP: placeholder)
-- `QueryType::Equipment` - Get equipment status
-- `QueryType::Social` - Get social information (MVP: placeholder)
-
-**Example:**
-```rust
-use claw_core::messages::QueryType;
-
-let state = agent.query(QueryType::State).await?;
-let equipment = agent.query(QueryType::Equipment).await?;
-
-println!("State: {}", state);
-println!("Memory equipped: {}", equipment["memory_equipped"]);
-```
-
----
-
-##### `equip_memory(&mut self, equipment: Box<dyn Equipment>) -> Result<()>`
-
-Equip memory equipment on the agent.
-
-**Parameters:**
-- `equipment` - Box<dyn Equipment> to equip
-
-**Returns:** `Result<()>` - Success or error
-
-**Errors:**
-- `AgentError::InvalidEquipment` - Equipment slot not supported
-
-**Example:**
-```rust
-use claw_core::equipment::SimpleMemoryEquipment;
-
-let memory = Box::new(SimpleMemoryEquipment::new());
-agent.equip_memory(memory).await?;
-```
-
----
-
-##### `stop(&mut self) -> Result<()>`
-
-Stop the agent.
-
-**Returns:** `Result<()>` - Success or error
-
-**Example:**
-```rust
-agent.stop().await?;
-assert_eq!(agent.status(), &AgentStatus::Stopped);
-```
-
----
-
-### `MinimalAgent` Implementation
-
-Default implementation of the `Agent` trait.
-
-```rust
-pub struct MinimalAgent {
-    id: String,
-    cell_ref: String,
-    model: String,
-    config: HashMap<String, serde_json::Value>,
-    state: AgentState,
-    memory_equipment: Option<Box<dyn Equipment>>,
-}
-```
-
-#### Constructor
-
-```rust
-pub fn new(config: AgentConfig) -> Self
-```
-
-Create a new minimal agent from configuration.
-
-**Parameters:**
-- `config` - Agent configuration
-
-**Returns:** New `MinimalAgent` instance
-
-**Example:**
-```rust
-use claw_core::{MinimalAgent, AgentConfig};
-
-let config = AgentConfig {
-    id: "my-agent".to_string(),
-    cell_ref: "A1".to_string(),
-    model: "gpt-4".to_string(),
-    config: HashMap::new(),
-};
-
-let agent = MinimalAgent::new(config);
-```
-
-#### Methods
-
-##### `config(&self) -> &AgentConfig`
-
-Get the agent's configuration.
-
-##### `cell_ref(&self) -> &str`
-
-Get the agent's cell reference.
-
-##### `model(&self) -> &str`
-
-Get the agent's model name.
-
----
-
-## Equipment API
-
-### `Equipment` Trait
-
-Trait for equipment that can be equipped on agents.
-
-```rust
-#[async_trait]
-pub trait Equipment: Send + Sync {
-    fn slot(&self) -> EquipmentSlot;
-    async fn process(&self, data: HashMap<String, serde_json::Value>) -> Result<String>;
-}
-```
-
-#### Methods
-
-##### `slot(&self) -> EquipmentSlot`
-
-Get the equipment slot type.
-
-**Returns:** `EquipmentSlot` enum value
-
----
-
-##### `process(&self, data: HashMap<String, serde_json::Value>) -> Result<String>`
-
-Process data through the equipment.
-
-**Parameters:**
-- `data` - Input data as key-value map
-
-**Returns:** `Result<String>` - Processed result or error
-
----
-
-### `EquipmentSlot` Enum
-
-Available equipment slots.
-
-```rust
-pub enum EquipmentSlot {
-    Memory,      // Memory equipment slot
-    Reasoning,   // Reasoning equipment slot (MVP: not implemented)
-    Consensus,   // Consensus equipment slot (MVP: not implemented)
-}
-```
-
----
-
-### `SimpleMemoryEquipment` Implementation
-
-Basic memory equipment implementation.
-
-```rust
-pub struct SimpleMemoryEquipment {
-    memory: HashMap<String, serde_json::Value>,
-}
-```
-
-#### Constructor
-
-```rust
-pub fn new() -> Self
-```
-
-Create a new simple memory equipment instance.
-
-**Returns:** New `SimpleMemoryEquipment` instance
-
-**Example:**
-```rust
-use claw_core::equipment::SimpleMemoryEquipment;
-
-let memory = SimpleMemoryEquipment::new();
-```
-
----
-
-## Messages API
-
-### `Message` Enum
-
-Messages that can be sent to agents.
-
-```rust
-pub enum Message {
-    Trigger {
-        payload: TriggerPayload,
-    },
-    Cancel,
-    Query {
-        query_type: QueryType,
-    },
-}
-```
-
-#### Variants
-
-##### `Trigger { payload }`
-
-Trigger agent with payload.
-
-**Fields:**
-- `payload` - `TriggerPayload` enum
-
----
-
-##### `Cancel`
-
-Cancel the agent's current operation.
-
----
-
-##### `Query { query_type }`
-
-Query agent for information.
-
-**Fields:**
-- `query_type` - `QueryType` enum
-
----
-
-### `TriggerPayload` Enum
-
-Payload types for trigger messages.
-
-```rust
-pub enum TriggerPayload {
-    Data {
-        cell_ref: String,
-        new_value: serde_json::Value,
-        old_value: serde_json::Value,
-    },
-    Periodic {
-        interval_ms: u64,
-    },
-    Formula {
-        formula: String,
-        result: serde_json::Value,
-    },
-    External {
-        source: String,
-        event_data: HashMap<String, serde_json::Value>,
-    },
-}
-```
-
-#### Variants
-
-##### `Data { cell_ref, new_value, old_value }`
-
-Data change trigger.
-
-**Fields:**
-- `cell_ref` - Cell reference that changed
-- `new_value` - New cell value
-- `old_value` - Previous cell value
-
----
-
-##### `Periodic { interval_ms }`
-
-Periodic time-based trigger.
-
-**Fields:**
-- `interval_ms` - Interval in milliseconds
-
----
-
-##### `Formula { formula, result }`
-
-Formula evaluation trigger.
-
-**Fields:**
-- `formula` - Formula string
-- `result` - Formula result
-
----
-
-##### `External { source, event_data }`
-
-External event trigger.
-
-**Fields:**
-- `source` - Event source identifier
-- `event_data` - Event data as key-value map
-
----
-
-### `QueryType` Enum
-
-Types of queries that can be performed.
-
-```rust
-pub enum QueryType {
-    State,
-    Reasoning,
-    Learning,
-    Equipment,
-    Social,
-}
-```
-
----
-
-### `ProcessingResult` Struct
-
-Result of processing a message.
-
-```rust
-pub struct ProcessingResult {
-    pub agent_id: String,
-    pub message_id: String,
-    pub success: bool,
-    pub output: Option<String>,
-    pub processing_time_ms: u64,
-}
-```
-
-**Fields:**
-- `agent_id` - ID of the agent that processed the message
-- `message_id` - ID of the processed message
-- `success` - Whether processing was successful
-- `output` - Optional output string
-- `processing_time_ms` - Processing time in milliseconds
-
----
-
-## REST API
-
-### Base URL
-
-```
-http://localhost:8080/api
-```
-
-### Endpoints
-
-#### POST /api/claws
-
-Create a new claw agent.
-
-**Request:**
+### Success Response
 ```json
 {
-  "id": "my-agent",
-  "cell_ref": "A1",
-  "model": "gpt-4",
-  "config": {
-    "temperature": 0.7
+  "success": true,
+  "data": { ... }
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Error description",
+    "code": "ERROR_CODE"
   }
 }
 ```
 
-**Response (200):**
+---
+
+## Health Check
+
+### GET /health
+
+Check if the server is running.
+
+**Response**:
 ```json
 {
-  "id": "my-agent",
-  "status": "Idle",
-  "created_at": "2024-03-18T12:00:00Z"
+  "status": "ok",
+  "timestamp": "2026-03-18T12:00:00Z",
+  "uptime": 12345,
+  "agents": 5
 }
 ```
 
-**Error (400):**
-```json
-{
-  "error": "VALIDATION_ERROR",
-  "message": "Invalid agent configuration"
-}
+**Status Codes**:
+- `200 OK` - Server is healthy
+
+**Example**:
+```bash
+curl http://localhost:8080/health
 ```
 
 ---
 
-#### GET /api/claws/{id}
+## Agent Management
 
-Get agent information.
+### List All Agents
 
-**Parameters:**
-- `id` - Agent ID (path parameter)
+### GET /api/v1/agents
 
-**Response (200):**
+Get a list of all agents.
+
+**Query Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | number | No | Maximum number of agents to return |
+| `offset` | number | No | Number of agents to skip |
+| `state` | string | No | Filter by agent state (IDLE, THINKING, ACTING, etc.) |
+
+**Response**:
 ```json
 {
-  "id": "my-agent",
-  "status": "Idle",
-  "state": {
-    "status": "Idle",
-    "memory": {},
-    "has_memory_equipment": false
+  "success": true,
+  "data": {
+    "agents": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "model": "deepseek-chat",
+        "seed": "Monitor cell A1",
+        "equipment": ["MEMORY", "REASONING"],
+        "trigger": {
+          "type": "data",
+          "source": "spreadsheet"
+        },
+        "state": "IDLE",
+        "cellId": {
+          "sheetId": "sheet1",
+          "row": 0,
+          "col": 0
+        },
+        "createdAt": "2026-03-18T12:00:00Z",
+        "updatedAt": "2026-03-18T12:00:00Z"
+      }
+    ],
+    "total": 1,
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Success
+
+**Example**:
+```bash
+curl http://localhost:8080/api/v1/agents
+curl http://localhost:8080/api/v1/agents?state=IDLE&limit=5
+```
+
+---
+
+### Create Agent
+
+### POST /api/v1/agents
+
+Create a new agent.
+
+**Request Body**:
+
+```json
+{
+  "model": "deepseek-chat",
+  "seed": "Monitor cell A1 for temperature changes",
+  "equipment": ["MEMORY", "REASONING"],
+  "trigger": {
+    "type": "data",
+    "source": "spreadsheet"
   },
-  "cell_ref": "A1",
-  "model": "gpt-4"
-}
-```
-
-**Error (404):**
-```json
-{
-  "error": "NOT_FOUND",
-  "message": "Agent not found"
-}
-```
-
----
-
-#### POST /api/claws/{id}/trigger
-
-Trigger an agent.
-
-**Parameters:**
-- `id` - Agent ID (path parameter)
-
-**Request:**
-```json
-{
-  "payload": {
-    "Data": {
-      "cell_ref": "A1",
-      "new_value": 42,
-      "old_value": null
-    }
+  "cellId": {
+    "sheetId": "sheet1",
+    "row": 0,
+    "col": 0
   }
 }
 ```
 
-**Response (200):**
+**Field Descriptions**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `model` | string | Yes | AI model to use (e.g., "deepseek-chat") |
+| `seed` | string | Yes | Natural language description of agent's purpose |
+| `equipment` | array | Yes | List of equipment slots to equip |
+| `trigger` | object | Yes | Trigger configuration |
+| `trigger.type` | string | Yes | Trigger type: "manual", "data", "periodic", "event" |
+| `trigger.source` | string | No | Trigger source (for type="data") |
+| `trigger.interval` | number | No | Interval in milliseconds (for type="periodic") |
+| `cellId` | object | No | Cell to attach agent to |
+| `cellId.sheetId` | string | No | Sheet identifier |
+| `cellId.row` | number | No | Row index (0-based) |
+| `cellId.col` | number | No | Column index (0-based) |
+
+**Equipment Options**:
+- `MEMORY` - State persistence
+- `REASONING` - Decision making
+- `CONSENSUS` - Multi-agent agreement
+- `SPREADSHEET` - Cell integration
+- `DISTILLATION` - Model compression
+- `COORDINATION` - Multi-agent orchestration
+
+**Response**:
 ```json
 {
-  "agent_id": "my-agent",
-  "message_id": "msg-1234567890",
   "success": true,
-  "output": "Processed trigger: Data {...}",
-  "processing_time_ms": 10
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "model": "deepseek-chat",
+    "seed": "Monitor cell A1 for temperature changes",
+    "equipment": ["MEMORY", "REASONING"],
+    "trigger": {
+      "type": "data",
+      "source": "spreadsheet"
+    },
+    "state": "IDLE",
+    "cellId": {
+      "sheetId": "sheet1",
+      "row": 0,
+      "col": 0
+    },
+    "createdAt": "2026-03-18T12:00:00Z",
+    "updatedAt": "2026-03-18T12:00:00Z"
+  }
 }
+```
+
+**Status Codes**:
+- `201 Created` - Agent created successfully
+- `400 Bad Request` - Invalid request body
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/v1/agents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek-chat",
+    "seed": "Monitor cell A1",
+    "equipment": ["MEMORY", "REASONING"],
+    "trigger": {"type": "data"},
+    "cellId": {"sheetId": "sheet1", "row": 0, "col": 0}
+  }'
 ```
 
 ---
 
-#### POST /api/claws/{id}/cancel
+### Get Agent by ID
 
-Cancel agent operation.
+### GET /api/v1/agents/:id
 
-**Parameters:**
-- `id` - Agent ID (path parameter)
+Get details of a specific agent.
 
-**Response (200):**
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Response**:
 ```json
 {
   "success": true,
-  "message": "Agent cancelled"
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "model": "deepseek-chat",
+    "seed": "Monitor cell A1",
+    "equipment": ["MEMORY", "REASONING"],
+    "trigger": {
+      "type": "data",
+      "source": "spreadsheet"
+    },
+    "state": "IDLE",
+    "cellId": {
+      "sheetId": "sheet1",
+      "row": 0,
+      "col": 0
+    },
+    "createdAt": "2026-03-18T12:00:00Z",
+    "updatedAt": "2026-03-18T12:00:00Z"
+  }
 }
+```
+
+**Status Codes**:
+- `200 OK` - Success
+- `404 Not Found` - Agent not found
+
+**Example**:
+```bash
+curl http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000
 ```
 
 ---
 
-#### DELETE /api/claws/{id}
+### Update Agent
+
+### PATCH /api/v1/agents/:id
+
+Update an existing agent.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Request Body**:
+
+All fields are optional. Only include fields you want to update.
+
+```json
+{
+  "seed": "Updated seed description",
+  "equipment": ["MEMORY", "REASONING", "CONSENSUS"],
+  "trigger": {
+    "type": "periodic",
+    "interval": 10000
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "model": "deepseek-chat",
+    "seed": "Updated seed description",
+    "equipment": ["MEMORY", "REASONING", "CONSENSUS"],
+    "trigger": {
+      "type": "periodic",
+      "interval": 10000
+    },
+    "state": "IDLE",
+    "cellId": {
+      "sheetId": "sheet1",
+      "row": 0,
+      "col": 0
+    },
+    "createdAt": "2026-03-18T12:00:00Z",
+    "updatedAt": "2026-03-18T12:05:00Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Agent updated successfully
+- `404 Not Found` - Agent not found
+- `400 Bad Request` - Invalid request body
+
+**Example**:
+```bash
+curl -X PATCH http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seed": "Updated seed description"
+  }'
+```
+
+---
+
+### Delete Agent
+
+### DELETE /api/v1/agents/:id
 
 Delete an agent.
 
-**Parameters:**
-- `id` - Agent ID (path parameter)
+**URL Parameters**:
 
-**Response (200):**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Response**:
 ```json
 {
   "success": true,
-  "message": "Agent deleted"
+  "data": {
+    "message": "Agent deleted successfully",
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  }
 }
+```
+
+**Status Codes**:
+- `200 OK` - Agent deleted successfully
+- `404 Not Found` - Agent not found
+
+**Example**:
+```bash
+curl -X DELETE http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000
+```
+
+---
+
+## Agent Actions
+
+### Trigger Agent
+
+### POST /api/v1/agents/:id/trigger
+
+Trigger an agent to start thinking and acting.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Request Body** (Optional):
+
+```json
+{
+  "data": {
+    "value": 42,
+    "source": "manual_trigger"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "agentId": "550e8400-e29b-41d4-a716-446655440000",
+    "previousState": "IDLE",
+    "currentState": "THINKING",
+    "triggeredAt": "2026-03-18T12:05:00Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Agent triggered successfully
+- `404 Not Found` - Agent not found
+- `409 Conflict` - Agent is already in THINKING or ACTING state
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000/trigger \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {"value": 42}
+  }'
+```
+
+---
+
+### Get Agent State
+
+### GET /api/v1/agents/:id/state
+
+Get the current state of an agent.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "agentId": "550e8400-e29b-41d4-a716-446655440000",
+    "state": "IDLE",
+    "stateHistory": [
+      {
+        "state": "IDLE",
+        "timestamp": "2026-03-18T12:00:00Z"
+      },
+      {
+        "state": "THINKING",
+        "timestamp": "2026-03-18T12:05:00Z"
+      },
+      {
+        "state": "ACTING",
+        "timestamp": "2026-03-18T12:05:02Z"
+      },
+      {
+        "state": "IDLE",
+        "timestamp": "2026-03-18T12:05:03Z"
+      }
+    ],
+    "lastTriggeredAt": "2026-03-18T12:05:00Z",
+    "lastActionAt": "2026-03-18T12:05:03Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Success
+- `404 Not Found` - Agent not found
+
+**Example**:
+```bash
+curl http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000/state
+```
+
+---
+
+### Equip Agent
+
+### POST /api/v1/agents/:id/equip
+
+Equip an agent with additional equipment.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Request Body**:
+
+```json
+{
+  "equipment": ["CONSENSUS", "COORDINATION"]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "agentId": "550e8400-e29b-41d4-a716-446655440000",
+    "previousState": "IDLE",
+    "currentState": "EQUIPPING",
+    "equipment": ["MEMORY", "REASONING", "CONSENSUS", "COORDINATION"],
+    "equippedAt": "2026-03-18T12:05:00Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Equipment added successfully
+- `404 Not Found` - Agent not found
+- `400 Bad Request` - Invalid equipment slot
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000/equip \
+  -H "Content-Type: application/json" \
+  -d '{
+    "equipment": ["CONSENSUS"]
+  }'
+```
+
+---
+
+### Unequip Agent
+
+### POST /api/v1/agents/:id/unequip
+
+Remove equipment from an agent.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | Agent UUID |
+
+**Request Body**:
+
+```json
+{
+  "equipment": ["CONSENSUS"]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "agentId": "550e8400-e29b-41d4-a716-446655440000",
+    "previousState": "IDLE",
+    "currentState": "UNEQUIPPING",
+    "equipment": ["MEMORY", "REASONING"],
+    "unequippedAt": "2026-03-18T12:05:00Z"
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Equipment removed successfully
+- `404 Not Found` - Agent not found
+- `400 Bad Request` - Invalid equipment slot
+
+**Example**:
+```bash
+curl -X POST http://localhost:8080/api/v1/agents/550e8400-e29b-41d4-a716-446655440000/unequip \
+  -H "Content-Type: application/json" \
+  -d '{
+    "equipment": ["CONSENSUS"]
+  }'
+```
+
+---
+
+## Cell Integration
+
+### Get Agent by Cell
+
+### GET /api/v1/cells/:sheetId/:row/:col/agent
+
+Get the agent attached to a specific cell.
+
+**URL Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sheetId` | string | Yes | Sheet identifier |
+| `row` | number | Yes | Row index (0-based) |
+| `col` | number | Yes | Column index (0-based) |
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "agent": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "model": "deepseek-chat",
+      "seed": "Monitor cell A1",
+      "equipment": ["MEMORY", "REASONING"],
+      "trigger": {
+        "type": "data",
+        "source": "spreadsheet"
+      },
+      "state": "IDLE",
+      "cellId": {
+        "sheetId": "sheet1",
+        "row": 0,
+        "col": 0
+      },
+      "createdAt": "2026-03-18T12:00:00Z",
+      "updatedAt": "2026-03-18T12:00:00Z"
+    },
+    "cellId": {
+      "sheetId": "sheet1",
+      "row": 0,
+      "col": 0
+    }
+  }
+}
+```
+
+**Status Codes**:
+- `200 OK` - Agent found
+- `404 Not Found` - No agent attached to this cell
+
+**Example**:
+```bash
+curl http://localhost:8080/api/v1/cells/sheet1/0/0/agent
 ```
 
 ---
 
 ## WebSocket API
 
-### Connection URL
+### Connect to WebSocket
 
+### WS /ws
+
+Establish a WebSocket connection for real-time agent updates.
+
+**Connection URL**:
 ```
 ws://localhost:8080/ws
 ```
 
-### Authentication
-
-Include API key as query parameter:
-
-```
-ws://localhost:8080/ws?token=your_api_key
-```
-
-### Message Format
-
-All WebSocket messages follow this structure:
-
-```json
-{
-  "type": "MESSAGE_TYPE",
-  "trace_id": "trace_1234567890_abc123",
-  "timestamp": 1710756000000,
-  "payload": {
-    // Message-specific data
-  }
-}
-```
-
-### Message Types
-
-#### STATE_CHANGE
-
-Agent state changed.
-
-**Payload:**
-```json
-{
-  "agent_id": "my-agent",
-  "old_state": "Idle",
-  "new_state": "Processing",
-  "timestamp": 1710756000000
-}
-```
-
----
-
-#### ERROR
-
-Agent encountered an error.
-
-**Payload:**
-```json
-{
-  "agent_id": "my-agent",
-  "error": "Processing failed: Invalid input",
-  "timestamp": 1710756000000
-}
-```
-
----
-
-#### CELL_UPDATE
-
-Cell value updated.
-
-**Payload:**
-```json
-{
-  "cell_ref": "A1",
-  "old_value": null,
-  "new_value": 42,
-  "agent_id": "my-agent",
-  "timestamp": 1710756000000
-}
-```
-
----
-
-### Subscription Messages
-
-#### Subscribe to Agent Updates
+**Message Format (Client → Server)**:
 
 ```json
 {
   "type": "SUBSCRIBE",
-  "trace_id": "trace_1234567890_abc123",
-  "timestamp": 1710756000000,
-  "payload": {
-    "agent_id": "my-agent",
-    "cell_id": "A1",
-    "sheet_id": "Sheet1"
-  }
+  "agentId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
----
+**Message Types**:
+- `SUBSCRIBE` - Subscribe to updates for a specific agent
+- `UNSUBSCRIBE` - Unsubscribe from agent updates
 
-#### Unsubscribe from Agent Updates
+**Message Format (Server → Client)**:
 
 ```json
 {
-  "type": "UNSUBSCRIBE",
-  "trace_id": "trace_1234567890_abc123",
-  "timestamp": 1710756000000,
-  "payload": {
-    "agent_id": "my-agent",
-    "cell_id": "A1",
-    "sheet_id": "Sheet1"
+  "type": "AGENT_STATE_CHANGE",
+  "agentId": "550e8400-e29b-41d4-a716-446655440000",
+  "oldState": "IDLE",
+  "newState": "THINKING",
+  "timestamp": "2026-03-18T12:05:00Z"
+}
+```
+
+**Message Types**:
+- `SUBSCRIBED` - Subscription confirmed
+- `AGENT_STATE_CHANGE` - Agent state changed
+- `AGENT_DELETED` - Agent was deleted
+- `ERROR` - Error occurred
+
+**Example (JavaScript)**:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8080/ws');
+
+ws.onopen = () => {
+  console.log('Connected to WebSocket');
+
+  // Subscribe to agent updates
+  ws.send(JSON.stringify({
+    type: 'SUBSCRIBE',
+    agentId: '550e8400-e29b-41d4-a716-446655440000'
+  }));
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log('Received:', message);
+
+  switch (message.type) {
+    case 'SUBSCRIBED':
+      console.log(`Subscribed to agent ${message.agentId}`);
+      break;
+    case 'AGENT_STATE_CHANGE':
+      console.log(`Agent ${message.agentId}: ${message.oldState} → ${message.newState}`);
+      break;
+    case 'AGENT_DELETED':
+      console.log(`Agent ${message.agentId} was deleted`);
+      break;
+    case 'ERROR':
+      console.error('WebSocket error:', message.error);
+      break;
   }
-}
+};
+
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+
+ws.onclose = () => {
+  console.log('WebSocket connection closed');
+};
 ```
 
----
+**Example (Python)**:
 
-## Error Handling
+```python
+import asyncio
+import websockets
+import json
 
-### `AgentError` Enum
+async def websocket_client():
+    uri = "ws://localhost:8080/ws"
 
-Errors that can occur during agent operations.
-
-```rust
-pub enum AgentError {
-    UnsupportedMessage(String),
-    InvalidEquipment(String),
-    ProcessingError(String),
-    NotFound(String),
-    ValidationError(String),
-}
-```
-
-#### Variants
-
-##### `UnsupportedMessage(String)`
-
-Message type is not supported by the agent.
-
-**Fields:**
-- `0` - Message ID
-
----
-
-##### `InvalidEquipment(String)`
-
-Equipment is invalid or not supported.
-
-**Fields:**
-- `0` - Error message
-
----
-
-##### `ProcessingError(String)`
-
-Error occurred during processing.
-
-**Fields:**
-- `0` - Error message
-
----
-
-##### `NotFound(String)`
-
-Resource not found.
-
-**Fields:**
-- `0` - Resource identifier
-
----
-
-##### `ValidationError(String)`
-
-Validation error.
-
-**Fields:**
-- `0` - Validation error message
-
----
-
-### `Result<T>` Type
-
-Result type for agent operations.
-
-```rust
-pub type Result<T> = std::result::Result<T, AgentError>;
-```
-
----
-
-## Performance Characteristics
-
-### Agent Creation
-- **Time:** ~1ms
-- **Memory:** ~2MB per agent
-
-### Message Processing
-- **Latency:** ~10ms per message
-- **Throughput:** ~100 messages/second
-
-### Memory Equipment
-- **Capacity:** Unlimited (HashMap-based)
-- **Access Time:** O(1) average
-
----
-
-## Best Practices
-
-### 1. Agent Lifecycle
-
-Always stop agents when done:
-
-```rust
-// Create agent
-let agent = MinimalAgent::new(config);
-
-// Use agent
-agent.process(message).await?;
-
-// Stop agent
-agent.stop().await?;
-```
-
-### 2. Error Handling
-
-Handle errors appropriately:
-
-```rust
-match agent.process(message).await {
-    Ok(result) => {
-        if result.success {
-            println!("Success: {}", result.output.unwrap());
+    async with websockets.connect(uri) as websocket:
+        # Subscribe to agent updates
+        subscribe_message = {
+            "type": "SUBSCRIBE",
+            "agentId": "550e8400-e29b-41d4-a716-446655440000"
         }
-    }
-    Err(AgentError::ProcessingError(msg)) => {
-        eprintln!("Processing error: {}", msg);
-    }
-    Err(e) => {
-        eprintln!("Other error: {:?}", e);
-    }
-}
-```
+        await websocket.send(json.dumps(subscribe_message))
 
-### 3. Memory Equipment
+        # Listen for messages
+        while True:
+            message = await websocket.recv()
+            data = json.loads(message)
+            print(f"Received: {data}")
 
-Equip memory before processing:
-
-```rust
-let memory = Box::new(SimpleMemoryEquipment::new());
-agent.equip_memory(memory).await?;
-
-// Now agent can persist state
-agent.process(trigger_message).await?;
+asyncio.run(websocket_client())
 ```
 
 ---
 
-## MVP Limitations
+## Error Codes
 
-The MVP version has these limitations:
-
-1. **Single Equipment Slot** - Only Memory equipment is supported
-2. **No Social Coordination** - Master-slave and co-worker patterns not implemented
-3. **No Learning** - Seed learning system not implemented
-4. **Basic Queries** - Reasoning, Learning, and Social queries return placeholders
-5. **No Persistence** - Agent state is not persisted across restarts
-
-These features will be added in future versions.
-
----
-
-## Version History
-
-- **0.1.0** (2024-03-18) - Initial MVP release
-  - Agent lifecycle management
-  - Memory equipment
-  - Basic triggers
-  - REST API
-  - WebSocket support
+| Code | Description |
+|------|-------------|
+| `AGENT_NOT_FOUND` | Agent with specified ID not found |
+| `INVALID_AGENT_ID` | Invalid agent ID format |
+| `INVALID_STATE` | Invalid agent state |
+| `INVALID_EQUIPMENT` | Invalid equipment slot |
+| `INVALID_TRIGGER_TYPE` | Invalid trigger type |
+| `INVALID_CELL_ID` | Invalid cell ID |
+| `CELL_ALREADY_OCCUPIED` | Cell already has an agent |
+| `AGENT_IN_USE` | Agent is busy (in THINKING or ACTING state) |
+| `MISSING_REQUIRED_FIELD` | Missing required field in request |
+| `INVALID_JSON` | Invalid JSON in request body |
 
 ---
 
-## Support
+## Rate Limiting
 
-For issues, questions, or contributions, please visit:
-- **GitHub:** https://github.com/SuperInstance/claw
-- **Documentation:** https://github.com/SuperInstance/claw/tree/main/docs
+**Current Status**: Not implemented in MVP
+
+The MVP does not enforce rate limits.
+
+**Planned**: Rate limiting will be added in a future round.
+
+---
+
+## SDKs and Libraries
+
+### JavaScript/TypeScript
+
+```typescript
+import { SpreadsheetClawIntegration } from '@superinstance/spreadsheet-claw-integration';
+
+const integration = new SpreadsheetClawIntegration({
+  integrationConfig: {
+    clawServerUrl: 'http://localhost:8080',
+  },
+});
+
+const agent = await integration.createAgentForCell(
+  { sheetId: 'sheet1', row: 0, col: 0 },
+  {
+    model: 'deepseek-chat',
+    seed: 'Monitor cell value changes',
+    equipment: ['MEMORY', 'REASONING'],
+    trigger: { type: 'data', source: 'spreadsheet' },
+  }
+);
+```
+
+### Python
+
+```python
+import requests
+
+base_url = "http://localhost:8080"
+
+# Create agent
+response = requests.post(
+    f"{base_url}/api/v1/agents",
+    json={
+        "model": "deepseek-chat",
+        "seed": "Monitor cell A1",
+        "equipment": ["MEMORY", "REASONING"],
+        "trigger": {"type": "data"},
+        "cellId": {"sheetId": "sheet1", "row": 0, "col": 0}
+    }
+)
+
+agent = response.json()
+print(f"Created agent: {agent['data']['id']}")
+```
+
+---
+
+## Testing the API
+
+### Using curl
+
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# Create agent
+curl -X POST http://localhost:8080/api/v1/agents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek-chat",
+    "seed": "Monitor cell A1",
+    "equipment": ["MEMORY", "REASONING"],
+    "trigger": {"type": "data"},
+    "cellId": {"sheetId": "sheet1", "row": 0, "col": 0}
+  }'
+
+# List agents
+curl http://localhost:8080/api/v1/agents
+
+# Get agent by cell
+curl http://localhost:8080/api/v1/cells/sheet1/0/0/agent
+
+# Trigger agent
+curl -X POST http://localhost:8080/api/v1/agents/{AGENT_ID}/trigger
+```
+
+### Using Postman
+
+1. Import the API collection (see `/docs/postman-collection.json`)
+2. Set base URL to `http://localhost:8080`
+3. Run requests
+
+---
+
+## Changelog
+
+### Version 0.1.0 (2026-03-18)
+- Initial MVP release
+- Basic CRUD operations for agents
+- WebSocket support for real-time updates
+- Cell-to-agent mapping
+- Equipment system
+- Trigger system
+
+---
+
+**Need help? Check out the [Getting Started Guide](./GETTING_STARTED.md) or [Tutorial](./TUTORIAL.md)!**
