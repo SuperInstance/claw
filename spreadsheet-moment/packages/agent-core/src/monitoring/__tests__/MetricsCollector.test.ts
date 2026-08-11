@@ -26,13 +26,16 @@ import {
   resetMetricsCollector
 } from '../MetricsCollector';
 import { EventEmitter } from 'events';
-
-// Mock process.memoryUsage for Node.js environment
-const mockMemoryUsage = jest.fn();
-global.process = {
-  memoryUsage: mockMemoryUsage,
-  env: {}
-};
+  // Mock process.memoryUsage for Node.js environment
+  const originalProcess = global.process;
+  const mockMemoryUsage = jest.fn();
+  
+  // @ts-ignore: Overriding global process for testing
+  global.process = {
+    ...originalProcess,
+    memoryUsage: mockMemoryUsage,
+    env: { ...originalProcess.env }
+  };
 
 describe('MetricsCollector', () => {
   let collector: MetricsCollector;
