@@ -1,0 +1,150 @@
+# Spreadsheet Moment - Ingress Configuration with TLS
+# Routes external traffic to internal services
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spreadsheet-moment-ingress
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.spreadsheet-moment.io
+    - ws.spreadsheet-moment.io
+    secretName: spreadsheet-moment-tls
+  rules:
+  # GraphQL API
+  - host: api.spreadsheet-moment.io
+    http:
+      paths:
+      - path: /graphql
+        pathType: Prefix
+        backend:
+          service:
+            name: graphql-api
+            port:
+              number: 4000
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: graphql-api
+            port:
+              number: 4000
+      - path: /metrics
+        pathType: Exact
+        backend:
+          service:
+            name: graphql-api
+            port:
+              number: 4000
+  # WebSocket / Subscription Service
+  - host: ws.spreadsheet-moment.io
+    http:
+      paths:
+      - path: /graphql
+        pathType: Prefix
+        backend:
+          service:
+            name: subscription-service
+            port:
+              number: 4002
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: subscription-service
+            port:
+              number: 4003
+---
+# Internal Ingress for analytics (optional)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spreadsheet-moment-internal-ingress
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - internal.spreadsheet-moment.io
+    secretName: spreadsheet-moment-tls
+  rules:
+  - host: internal.spreadsheet-moment.io
+    http:
+      paths:
+      - path: /analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: analytics-service
+            port:
+              number: 4001
+      - path: /community
+        pathType: Prefix
+        backend:
+          service:
+            name: community-service
+            port:
+              number: 4004
+---
+# Certificate Issuer (Let's Encrypt)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@spreadsheet-moment.io
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: admin@spreadsheet-moment.io
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx

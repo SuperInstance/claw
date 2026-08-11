@@ -1,0 +1,94 @@
+# Jaeger Configuration for Spreadsheet Moment
+# Distributed tracing system for APM
+
+# All-in-one configuration for development/testing
+# For production, use the microservices deployment
+
+span-storage:
+  type: elasticsearch
+  elasticsearch:
+    # Connection details
+    servers: https://elasticsearch:9200
+    username: elastic
+    password: ${ELASTICSEARCH_PASSWORD}
+    tls:
+      enabled: true
+      skip-host-verify: false
+
+    # Index configuration
+    index-prefix: jaeger
+    tags-as-fields:
+      all: false
+      include:
+        - http.status_code
+        - http.method
+        - http.url
+        - error
+        - user.id
+        - tenant.id
+
+    # Bulk processing
+    bulk:
+      size: 500
+      actions: 1000
+      flush-interval: 200ms
+
+    # TTL configuration
+    ttl:
+      spans: 168h
+      archive: 2160h
+
+# Collector configuration
+collector:
+  # Queue configuration
+  queue-size: 10000
+  num-workers: 10
+
+  # HTTP server
+  http-server:
+    host-port: :14268
+
+  # gRPC server
+  grpc-server:
+    host-port: :14250
+
+  # Zipkin server
+  zipkin:
+    host-port: :9411
+
+# Query service configuration
+query:
+  # Base path
+  base-path: /
+
+  # Static files
+  static-files: /go/jaeger-ui
+
+  # UI configuration
+  ui:
+    # Enable archive
+    archive-enabled: true
+
+    # Default lookup window
+    default-lookback: 1h
+
+    # Search configuration
+    max-clock-skew-adjustment: 0s
+    trace-id-drop-regex:
+
+# Sampling configuration
+sampling:
+  # Local sampling configuration
+  strategies-config-file: /etc/jaeger/sampling.json
+
+# Metrics configuration
+metrics-backend: prometheus
+metrics-http-route: /metrics
+
+# Logging configuration
+log-level: info
+log-encoding: json
+
+# Health check configuration
+health-check-http-port: 14269
+admin-http-port: 14270

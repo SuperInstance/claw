@@ -1,0 +1,219 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Spreadsheet Moment - GPU Monitoring",
+    "tags": ["gpu", "nvidia", "spreadsheet-moment"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "5s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "GPU Utilization",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(nvidia_gpu_utilization)",
+            "legendFormat": "Average"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 50, "color": "yellow" },
+                { "value": 80, "color": "green" }
+              ]
+            }
+          }
+        },
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "GPU Memory Usage",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "(sum(nvidia_gpu_memory_used_bytes) / sum(nvidia_gpu_memory_total_bytes)) * 100",
+            "legendFormat": "Memory Used"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 70, "color": "yellow" },
+                { "value": 90, "color": "red" }
+              ]
+            }
+          }
+        },
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "GPU Temperature",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(nvidia_gpu_temperature)",
+            "legendFormat": "Temperature"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 70, "color": "yellow" },
+                { "value": 85, "color": "red" }
+              ]
+            }
+          }
+        },
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 }
+      },
+      {
+        "id": 4,
+        "title": "GPU Utilization Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_utilization",
+            "legendFormat": "GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+      },
+      {
+        "id": 5,
+        "title": "GPU Memory Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_memory_used_bytes / 1024 / 1024 / 1024",
+            "legendFormat": "GPU {{gpu}} - Used"
+          },
+          {
+            "expr": "nvidia_gpu_memory_total_bytes / 1024 / 1024 / 1024",
+            "legendFormat": "GPU {{gpu}} - Total"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "GB"
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+      },
+      {
+        "id": 6,
+        "title": "GPU Power Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_power_usage",
+            "legendFormat": "GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "watt"
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+      },
+      {
+        "id": 7,
+        "title": "GPU Temperature Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_temperature",
+            "legendFormat": "GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius"
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+      },
+      {
+        "id": 8,
+        "title": "GPU Fan Speed",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_fan_speed",
+            "legendFormat": "GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+      },
+      {
+        "id": 9,
+        "title": "GPU Clock Frequency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "nvidia_gpu_clock_frequency",
+            "legendFormat": "GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MHz"
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+      },
+      {
+        "id": 10,
+        "title": "GPU PCIe Throughput",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(nvidia_gpu_pcie_throughput_rx[5m]) * 8 / 1000 / 1000 / 1000",
+            "legendFormat": "RX - GPU {{gpu}}"
+          },
+          {
+            "expr": "rate(nvidia_gpu_pcie_throughput_tx[5m]) * 8 / 1000 / 1000 / 1000",
+            "legendFormat": "TX - GPU {{gpu}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "Gbps"
+          }
+        },
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 }
+      }
+    ]
+  }
+}

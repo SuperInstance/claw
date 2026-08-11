@@ -1,0 +1,166 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/core/tauri-config-schema.json",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "Spreadsheet Moment",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "clipboard": {
+        "all": true,
+        "readText": true,
+        "writeText": true
+      },
+      "dialog": {
+        "all": true,
+        "ask": true,
+        "confirm": true,
+        "message": true,
+        "open": true,
+        "save": true
+      },
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true,
+        "scope": ["**"]
+      },
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": ["https://**"]
+      },
+      "notification": {
+        "all": true
+      },
+      "os": {
+        "all": true
+      },
+      "path": {
+        "all": true
+      },
+      "process": {
+        "all": true,
+        "relaunch": true,
+        "exit": true
+      },
+      "shell": {
+        "all": false,
+        "open": true,
+        "scope": [
+          {
+            "name": "open-url",
+            "cmd": "open",
+            "args": ["{0}"],
+            "platforms": ["macos"]
+          },
+          {
+            "name": "open-url",
+            "cmd": "xdg-open",
+            "args": ["{0}"],
+            "platforms": ["linux"]
+          },
+          {
+            "name": "open-url",
+            "cmd": "start",
+            "args": ["{0}"],
+            "platforms": ["windows"]
+          }
+        ]
+      },
+      "window": {
+        "all": true,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Developer Tool",
+      "copyright": "Copyright © 2024 SuperInstance. All rights reserved.",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "ai.superinstance.spreadsheet-moment",
+      "longDescription": "Every cell is a SuperInstance agent. Transform your spreadsheets with AI-powered cells that reason, communicate, and connect to the real world.",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null,
+        "minimumSystemVersion": "10.13"
+      },
+      "resources": [],
+      "shortDescription": "AI-powered distributed spreadsheet platform",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "http://timestamp.digicert.com"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' https://* http://localhost:* http://127.0.0.1:*; img-src 'self' asset: https://*; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-eval';"
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/SuperInstance/polln/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ1RjY3MTc5QjAyQTQ2RTQKUldSWTRaUHpUVVhNWFFPSUxEU2hYRHlCeHlKRjhFMWVVN2VKVWgrVHRkQnB4b0V6NjRIS0V6Cg=="
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "Spreadsheet Moment",
+        "width": 1600,
+        "height": 1000,
+        "minWidth": 1000,
+        "minHeight": 700,
+        "center": true,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false
+      }
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    }
+  }
+}

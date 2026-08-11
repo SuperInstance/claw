@@ -1,0 +1,340 @@
+name: Load Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'tests/load/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'api/**'
+      - 'tests/load/**'
+  schedule:
+    # Run full load test suite daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of load test to run'
+        required: true
+        default: 'baseline'
+        type: choice
+        options:
+          - baseline
+          - rampup
+          - sustained
+          - spike
+          - stress
+          - websocket
+          - all
+
+env:
+  NODE_VERSION: '18'
+  BASE_URL: http://localhost:4000
+  API_KEY: test-api-key
+
+jobs:
+  # Quick smoke test for PRs
+  baseline-check:
+    name: Baseline Load Test (PR Check)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g k6
+
+      - name: Generate test data
+        run: |
+          node tests/load/scripts/generate-users.js
+          node tests/load/scripts/generate-spreadsheets.js
+
+      - name: Start application
+        run: |
+          npm run dev &
+          sleep 30
+          curl -f ${{ env.BASE_URL }}/health || exit 1
+
+      - name: Run baseline load test
+        run: |
+          k6 run \
+            --out json=baseline-results.json \
+            --summary-export=baseline-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/baseline-test.js
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: baseline-results
+          path: |
+            baseline-results.json
+            baseline-summary.json
+
+      - name: Check thresholds
+        run: |
+          cat baseline-summary.json
+          # Check if error rate is below 1%
+          ERROR_RATE=$(jq '.metrics.http_req_failed.values.rate' baseline-summary.json)
+          if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
+            echo "Error rate too high: $ERROR_RATE"
+            exit 1
+          fi
+          # Check if p95 response time is below 100ms
+          P95=$(jq '.metrics.http_req_duration.values."p(95)"' baseline-summary.json)
+          if (( $(echo "$P95 > 0.1" | bc -l) )); then
+            echo "P95 response time too high: $P95"
+            exit 1
+          fi
+
+  # Full load test suite (nightly and manual)
+  full-load-test:
+    name: Full Load Test Suite
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 180
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: spreadsheet_moment_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.47.0/k6-v0.47.0-linux-amd64.tar.gz -L | tar xvz
+          sudo mv k6-v0.47.0-linux-amd64/k6 /usr/local/bin/
+
+      - name: Install artillery
+        run: npm install -g artillery
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup monitoring stack
+        run: |
+          cd tests/load
+          docker-compose up -d prometheus grafana
+          sleep 30
+
+      - name: Generate test data
+        run: |
+          node tests/load/scripts/generate-users.js
+          node tests/load/scripts/generate-spreadsheets.js
+
+      - name: Start application
+        run: |
+          npm run dev &
+          sleep 30
+          curl -f ${{ env.BASE_URL }}/health || exit 1
+
+      - name: Run baseline test
+        run: |
+          k6 run \
+            --out json=baseline-results.json \
+            --summary-export=baseline-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/baseline-test.js
+
+      - name: Run ramp-up test
+        run: |
+          k6 run \
+            --out json=rampup-results.json \
+            --summary-export=rampup-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/rampup-test.js
+
+      - name: Run spike test
+        run: |
+          k6 run \
+            --out json=spike-results.json \
+            --summary-export=spike-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/spike-test.js
+
+      - name: Run WebSocket tests
+        run: |
+          artillery run \
+            --output websocket-results.json \
+            tests/load/artillery/websocket-baseline.yml
+
+      - name: Run sustained test (conditional)
+        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'sustained'
+        run: |
+          k6 run \
+            --out json=sustained-results.json \
+            --summary-export=sustained-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/sustained-test.js
+
+      - name: Run stress test (conditional)
+        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'stress'
+        run: |
+          k6 run \
+            --out json=stress-results.json \
+            --summary-export=stress-summary.json \
+            --env BASE_URL=${{ env.BASE_URL }} \
+            --env API_KEY=${{ env.API_KEY }} \
+            tests/load/k6/stress-test.js
+
+      - name: Collect monitoring data
+        if: always()
+        run: |
+          cd tests/load
+          curl http://localhost:9090/api/v1/query?query=rate(http_requests_total[5m]) > prometheus-metrics.json
+
+      - name: Upload all results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: load-test-results
+          path: |
+            *-results.json
+            *-summary.json
+            prometheus-metrics.json
+
+      - name: Generate summary report
+        if: always()
+        run: |
+          cat > load-test-summary.md << EOF
+          # Load Test Summary
+          **Date:** $(date)
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+
+          ## Results
+
+          ### Baseline Test
+          $(jq '.' baseline-summary.json)
+
+          ### Ramp-up Test
+          $(jq '.' rampup-summary.json)
+
+          ### Spike Test
+          $(jq '.' spike-summary.json)
+          EOF
+
+      - name: Upload summary report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: load-test-summary
+          path: load-test-summary.md
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Load tests failed. Check the logs for details.'
+            })
+
+  # Performance regression detection
+  performance-regression:
+    name: Performance Regression Check
+    runs-on: ubuntu-latest
+    needs: baseline-check
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download results
+        uses: actions/download-artifact@v3
+        with:
+          name: baseline-results
+
+      - name: Compare with baseline
+        run: |
+          # Get previous baseline from main branch
+          git checkout main
+          curl -o previous-baseline.json https://storage.googleapis.com/load-test-baselines/baseline.json
+
+          # Compare results
+          node tests/load/scripts/compare-performance.js previous-baseline.json baseline-summary.json
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('baseline-summary.json', 'utf8');
+            const data = JSON.parse(summary);
+
+            const comment = `
+            ## Load Test Results
+
+            **Baseline Performance:**
+            - Requests/sec: ${data.metrics.http_reqs.values.count}
+            - P95 Response Time: ${data.metrics.http_req_duration.values['p(95)']}ms
+            - P99 Response Time: ${data.metrics.http_req_duration.values['p(99)']}ms
+            - Error Rate: ${(data.metrics.http_req_failed.values.rate * 100).toFixed(2)}%
+
+            ${data.metrics.http_req_failed.values.rate > 0.01 ? '⚠️ Error rate exceeds threshold!' : '✅ All thresholds passed'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

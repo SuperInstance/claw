@@ -1,0 +1,27 @@
+{
+  "title": "3D Stacked Memory for Neural Inference",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AR",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present 3D Stacked Memory for Neural Inference, a vertical integration architecture that co-locates ternary memory arrays with compute logic in a unified 3D-IC stack. By stacking 4 DRAM layers directly atop 1 compute layer with high-density TSVs (10\u03bcm pitch, 5\u03bcm diameter), we achieve 1.2 TB/s effective bandwidth\u20148.3\u00d7 higher than traditional 2D chips with 12\u00d7 lower energy per access. Our architecture introduces Ternary Memory-in-Logic (TMiL), where m",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P57",
+  "journal_ref": "",
+  "keywords": [
+    "3D-IC",
+    "Stacked DRAM",
+    "Memory-in-Logic",
+    "Ternary Memory",
+    "Neural Acceleration"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

@@ -1,0 +1,61 @@
+# 🚀 SpreadsheetMoment Cloudflare Worker Configuration
+#
+# Deploy: wrangler publish
+# Free Tier: 100,000 requests/day
+#
+# 📋 SETUP INSTRUCTIONS:
+# 1. Create KV namespace: wrangler kv:namespace create CELLS
+# 2. Add secrets (optional):
+#    wrangler secret put DEEPSEEK_API_KEY
+#    wrangler secret put OPENAI_API_KEY
+#    wrangler secret put ANTHROPIC_API_KEY
+# 3. Deploy: wrangler publish
+
+name = "spreadsheet-moment"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# KV Namespace for cell state storage
+# Create: wrangler kv:namespace create CELLS
+[[kv_namespaces]]
+binding = "CELLS"
+id = "YOUR_KV_NAMESPACE_ID" # Replace after creating
+
+# Environment Variables (Secrets)
+# Set via: wrangler secret put <NAME>
+# Secrets available in worker:
+# - DEEPSEEK_API_KEY: DeepSeek API key ($0.014/1K tokens - best for reasoning)
+# - OPENAI_API_KEY: OpenAI API key ($0.01/1K tokens)
+# - ANTHROPIC_API_KEY: Anthropic API key ($0.00025/1K tokens)
+# - GITHUB_WEBHOOK_SECRET: GitHub webhook verification (optional)
+# - ACCOUNT_ID: Cloudflare Account ID (for Workers AI)
+# - API_TOKEN: Cloudflare API Token (for Workers AI)
+
+# Public environment variables
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "1.0.0"
+
+# Build configuration for website
+[build]
+command = "cd ../website && npm install && npm run build"
+
+# Site configuration (for serving static assets)
+[site]
+bucket = "../website/dist"
+
+# Rules Pages + Worker integration
+# Serves static assets from Pages, API from Worker
+[[routes]]
+pattern = "your-domain.pages.dev/*"
+zone_name = "pages.dev"
+
+# Custom domain support (optional)
+# [[routes]]
+# pattern = "spreadsheet.yourdomain.com/*"
+# zone_name = "yourdomain.com"
+
+# Durable Objects for WebSocket support (optional, future)
+# [[durable_objects.bindings]]
+# name = "CELL_WEBSOCKET"
+# class_name = "CellWebSocket"

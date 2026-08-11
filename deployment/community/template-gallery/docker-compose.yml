@@ -1,0 +1,202 @@
+# Template Gallery Deployment for SuperInstance Community
+# Microservice for template management, reviews, and gamification
+
+version: '3.8'
+
+services:
+  # ========================================================================
+  # Template Gallery API Service
+  # ========================================================================
+  template-gallery-api:
+    build:
+      context: ../../..
+      dockerfile: deployment/community/template-gallery/Dockerfile
+    container_name: template-gallery-api
+    hostname: template-gallery
+    restart: always
+    ports:
+      - "4004:4004"   # API
+      - "9464:9464"   # Prometheus metrics
+
+    environment:
+      # Application Configuration
+      - NODE_ENV=production
+      - PORT=4004
+      - LOG_LEVEL=info
+
+      # Database Configuration
+      - DATABASE_URL=postgresql://template_user:${TEMPLATE_DB_PASSWORD}@template-postgres:5432/template_gallery
+      - DATABASE_POOL_MIN=2
+      - DATABASE_POOL_MAX=10
+
+      # Redis Configuration
+      - REDIS_URL=redis://template-redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+      # S3 Configuration (for template storage)
+      - AWS_S3_BUCKET=superinstance-templates
+      - AWS_S3_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=7d
+
+      # Discourse Integration
+      - DISCOURSE_API_URL=https://community.superinstance.ai
+      - DISCOURSE_API_KEY=${DISCOURSE_API_KEY}
+      - DISCOURSE_API_USERNAME=system
+
+      # Email Configuration
+      - SMTP_HOST=smtp.resend.com
+      - SMTP_PORT=587
+      - SMTP_USER=apikey
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=noreply@superinstance.ai
+
+      # Gamification Configuration
+      - GAMIFICATION_ENABLED=true
+      - REPUTATION_ENABLED=true
+
+      # Moderation Configuration
+      - MODERATION_QUEUE_ENABLED=true
+      - AUTO_MODERATION_ENABLED=true
+
+    depends_on:
+      template-postgres:
+        condition: service_healthy
+      template-redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ========================================================================
+  # PostgreSQL Database for Template Gallery
+  # ========================================================================
+  template-postgres:
+    image: postgres:15-alpine
+    container_name: template-postgres
+    hostname: postgres
+    restart: always
+
+    environment:
+      - POSTGRES_DB=template_gallery
+      - POSTGRES_USER=template_user
+      - POSTGRES_PASSWORD=${TEMPLATE_DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+    volumes:
+      - template-postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U template_user -d template_gallery"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ========================================================================
+  # Redis for Template Gallery
+  # ========================================================================
+  template-redis:
+    image: redis:7-alpine
+    container_name: template-redis
+    hostname: redis
+    restart: always
+
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+
+    volumes:
+      - template-redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # ========================================================================
+  # Worker for Background Jobs
+  # ========================================================================
+  template-worker:
+    build:
+      context: ../../..
+      dockerfile: deployment/community/template-gallery/Dockerfile
+    container_name: template-worker
+    hostname: worker
+    restart: always
+
+    command: node dist/community/workers/template-worker.js
+
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://template_user:${TEMPLATE_DB_PASSWORD}@template-postgres:5432/template_gallery
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@template-redis:6379
+      - DISCOURSE_API_URL=https://community.superinstance.ai
+      - DISCOURSE_API_KEY=${DISCOURSE_API_KEY}
+      - DISCOURSE_API_USERNAME=system
+      - AWS_S3_BUCKET=superinstance-templates
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
+    depends_on:
+      - template-postgres
+      - template-redis
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  template-postgres-data:
+    name: template-postgres-data
+  template-redis-data:
+    name: template-redis-data
+
+networks:
+  default:
+    name: template-gallery-network
+    driver: bridge

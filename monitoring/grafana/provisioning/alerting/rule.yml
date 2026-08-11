@@ -1,0 +1,103 @@
+apiVersion: 1
+
+rules:
+  - orgId: 1
+    name: 'Spreadsheet Moment Alert Rules'
+    folder: 'Spreadsheet Moment Alerts'
+    interval: 60s
+    rules:
+      - uid: system_health_alert
+        title: 'System Health Check'
+        condition: 'A'
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange: {
+              from: 300,
+              to: 0
+            }
+            datasourceUid: 'prometheus'
+            model: {
+              expr: 'up{job=~".*"}',
+              refId: 'A',
+              instant: true,
+              format: time_series
+            }
+        noDataState: Alerting
+        execErrState: Alerting
+        isPaused: false
+        notification_settings:
+          receivers:
+            - uid: default_alert_receiver
+
+      - uid: high_error_rate_alert
+        title: 'High Error Rate'
+        condition: 'A'
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange: {
+              from: 300,
+              to: 0
+            }
+            datasourceUid: 'prometheus'
+            model: {
+              expr: 'service:error_rate:percent > 5',
+              refId: 'A',
+              instant: true,
+              format: time_series
+            }
+        noDataState: NoData
+        execErrState: Alerting
+        isPaused: false
+        notification_settings:
+          receivers:
+            - uid: engineering_alert_receiver
+
+      - uid: high_latency_alert
+        title: 'High Latency'
+        condition: 'A'
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange: {
+              from: 300,
+              to: 0
+            }
+            datasourceUid: 'prometheus'
+            model: {
+              expr: 'service:latency:p95 > 1',
+              refId: 'A',
+              instant: true,
+              format: time_series
+            }
+        noDataState: NoData
+        execErrState: Alerting
+        isPaused: false
+        notification_settings:
+          receivers:
+            - uid: engineering_alert_receiver
+
+      - uid: security_alert
+        title: 'Security Event'
+        condition: 'A'
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange: {
+              from: 300,
+              to: 0
+            }
+            datasourceUid: 'prometheus'
+            model: {
+              expr: 'security:threat_level:score > 70',
+              refId: 'A',
+              instant: true,
+              format: time_series
+            }
+        noDataState: NoData
+        execErrState: Alerting
+        isPaused: false
+        notification_settings:
+          receivers:
+            - uid: security_alert_receiver

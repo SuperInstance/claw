@@ -1,0 +1,116 @@
+# Loki Configuration for Spreadsheet Moment
+# Distributed log aggregation system
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# Query configuration
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+# Schema configuration
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# Ruler configuration
+ruler:
+  alertmanager_url: http://localhost:9093
+  evaluation_interval: 1m
+  rules:
+    spreadsheet_moment:
+      - name: log_based_alerts
+        rules:
+          # High error rate in logs
+          - alert: HighErrorRateInLogs
+            expr: |
+              sum(count_over_time({level="error"}[5m])) > 100
+            for: 5m
+            labels:
+              severity: warning
+              component: application
+            annotations:
+              summary: "High error rate in application logs"
+              description: "Detected {{ $value }} error messages in 5 minutes"
+
+          # Database connection errors
+          - alert: DatabaseConnectionErrors
+            expr: |
+              sum(count_over_time({msg=~".*connection.*error.*"}[2m])) > 10
+            for: 2m
+            labels:
+              severity: critical
+              component: database
+            annotations:
+              summary: "Database connection errors detected"
+              description: "Multiple database connection errors in logs"
+
+          # Authentication failures
+          - alert: HighAuthFailures
+            expr: |
+              sum(count_over_time({msg=~".*auth.*fail.*"}[5m])) > 50
+            for: 5m
+            labels:
+              severity: warning
+              component: security
+            annotations:
+              summary: "High rate of authentication failures"
+              description: "{{ $value }} authentication failures in 5 minutes"
+
+# Limits configuration
+limits_config:
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_cache_freshness_per_query: 10m
+  max_streams_per_user: 0
+  max_global_streams_per_user: 5000
+  max_query_series: 1000
+  max_query_parallelism: 32
+
+# Chunk store configuration
+chunk_store_config:
+  max_look_back_period: 168h
+  chunk_cache_config:
+    embedded_cache:
+      enabled: true
+      max_size_mb: 500
+
+# Table manager configuration
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 744h
+
+# Compactor configuration
+compactor:
+  working_directory: /loki/boltdb-shipper-compactor
+  shared_store: filesystem
+  compaction_interval: 10m
+  retention_enabled: true
+  delete_request_cancel_period: 24h
+  delete_request_cancel_interval: 5m

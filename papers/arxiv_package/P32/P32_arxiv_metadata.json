@@ -1,0 +1,27 @@
+{
+  "title": "Dreaming and Memory Consolidation",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Offline consolidation\u2014replaying and restructuring memories during quiescent periods\u2014enables AI systems to learn from experience without disrupting ongoing operations. This paper introduces a dreaming framework for distributed AI systems that performs experience replay, memory reorganization, and model weight optimization during off-peak hours, inspired by sleep-based memory consolidation in biological brains. We demonstrate that dreaming improves performance by 23% on tas",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P32",
+  "journal_ref": "",
+  "keywords": [
+    "Continual Learning",
+    "Memory Consolidation",
+    "Experience Replay",
+    "Sleep",
+    "Catastrophic Forgetting"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

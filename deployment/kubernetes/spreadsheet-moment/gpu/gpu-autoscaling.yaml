@@ -1,0 +1,126 @@
+# Spreadsheet Moment - GPU Autoscaling Configuration
+# Uses KEDA for event-driven scaling and ML inference workloads
+
+# Prerequisites:
+# 1. KEDA installed in cluster
+#    helm repo add kedacore https://kedacore.github.io/charts
+#    helm install keda keda/keda-scaler --namespace keda --create-namespace
+#
+# 2. NVIDIA GPU Operator installed
+#    helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
+#    helm install gpu-operator nvidia/gpu-operator -n gpu-operator --create-namespace
+
+---
+# GPU Cluster Autoscaler (KEDA ScaledObject for GPU queue depth)
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ml-inference-gpu-scaler
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: gpu-autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-inference-service
+  pollingInterval: 30  # Check every 30 seconds
+  cooldownPeriod: 300  # Wait 5 minutes before scaling down
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  triggers:
+  # Scale based on GPU utilization
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus.monitoring.svc.cluster.local:9090
+      metricName: nvidia_gpu_duty_cycle
+      threshold: 80
+      query: avg(nvidia_gpu_duty_cycle{namespace="spreadsheet-moment"})
+  # Scale based on queue depth (requires queue metrics)
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus.monitoring.svc.cluster.local:9090
+      metricName: ml_inference_queue_depth
+      threshold: 10
+---
+# GPU Node Pool Definition (for GKE)
+# For EKS, use eksctl create nodegroup
+# For AKS, use az aks nodepool add
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-node-pool-manager
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: gpu-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-node-pool-manager
+  template:
+    metadata:
+      labels:
+        app: gpu-node-pool-manager
+    spec:
+      serviceAccountName: gpu-manager
+      containers:
+      - name: manager
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Monitor GPU node availability and scale accordingly
+          while true; do
+            GPU_NODES=$(kubectl get nodes -l accelerator=nvidia-gpu -o name | wc -l)
+            GPU_PODS=$(kubectl get pods -n spreadsheet-moment -l app=ml-inference -o name | wc -l)
+            echo "GPU Nodes: $GPU_NODES, GPU Pods: $GPU_PODS"
+            sleep 60
+          done
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+# Cluster Autoscaler Configuration
+# Automatically scales GPU nodes based on pending pod count
+# Note: For production, use cloud-specific autoscalers:
+# AWS: Cluster Autoscaler
+# GKE: Node Auto-Provisioning
+# Azure: Cluster Autoscaler
+#
+# This is a placeholder for documentation purposes
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpu-autoscaler-config
+  namespace: spreadsheet-moment
+data:
+  # Minimum GPU nodes to maintain
+  MIN_GPU_NODES: "1"
+  # Maximum GPU nodes to scale to
+  MAX_GPU_NODES: "5"
+  # Scale up when pending pods exceed this threshold
+  SCALE_UP_THRESHOLD: "2"
+  # Scale down when GPU utilization below this percentage
+  SCALE_DOWN_THRESHOLD: "30"
+---
+# GPU Resource Quota (limits GPU resources in namespace)
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: gpu-quota
+  namespace: spreadsheet-moment
+spec:
+  hard:
+    # Limit total GPU requests in namespace
+    requests.nvidia.com/gpu: "5"
+    limits.nvidia.com/gpu: "5"
+    # Limit GPU-related pods
+    count/pods: "10"

@@ -1,0 +1,53 @@
+# Citation Formats for P57
+
+## Title: 3D Stacked Memory for Neural Inference
+## Authors: SuperInstance Research Team
+## Year: 2026
+
+================================================================================
+
+### APA 7th Edition
+SuperInstance Research Team. (2026). 3D Stacked Memory for Neural Inference. arXiv preprint arXiv:[XXXX.XXXXX].
+
+### MLA 9th Edition
+"3D Stacked Memory for Neural Inference." SuperInstance Research Team, 2026, arXiv preprint arXiv:[XXXX.XXXXX].
+
+### Chicago 17th Edition
+SuperInstance Research Team. "3D Stacked Memory for Neural Inference." arXiv preprint arXiv:[XXXX.XXXXX] (2026).
+
+### Harvard Style
+SuperInstance Research Team (2026) '3D Stacked Memory for Neural Inference', arXiv preprint arXiv:[XXXX.XXXXX].
+
+### BibTeX
+@misc{superinstance20263d,
+  title = {3D Stacked Memory for Neural Inference},
+  author = {SuperInstance Research Team},
+  year = {2026},
+  eprint = {{arXiv:XXXX.XXXXX}},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  doi = {10.5281/zenodo.XXXXXXX},
+  url = {https://github.com/SuperInstance/SuperInstance-papers}
+}
+
+### EndNote
+%0 Generic
+%T 3D Stacked Memory for Neural Inference
+%A SuperInstance Research Team
+%D 2026
+%K arXiv preprint
+%R arXiv:XXXX.XXXXX
+%U https://github.com/SuperInstance/SuperInstance-papers
+%I SuperInstance Project
+
+
+### RIS
+TY - GEN
+TI - 3D Stacked Memory for Neural Inference
+AU - SuperInstance Research Team
+PY - 2026
+KW - arXiv preprint
+M3 - arXiv preprint arXiv:XXXX.XXXXX
+UR - https://github.com/SuperInstance/SuperInstance-papers
+PB - SuperInstance Project
+ER -

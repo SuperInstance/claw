@@ -1,0 +1,125 @@
+# Artillery WebSocket Load Test - Stress
+# Tests WebSocket performance under extreme load (5,000+ concurrent connections)
+
+config:
+  target: "ws://localhost:4000"
+  phases:
+    - duration: 120
+      arrivalRate: 20
+      name: "Ramp to 2,400 connections"
+    - duration: 120
+      arrivalRate: 30
+      name: "Ramp to 3,600 connections"
+    - duration: 120
+      arrivalRate: 42
+      name: "Ramp to 5,040 connections (target)"
+    - duration: 300
+      arrivalRate: 42
+      name: "Sustain 5,000+ connections (5 minutes)"
+  processor: "./websocket-processor.js"
+  variables:
+    testScenario: "stress"
+
+scenarios:
+  - name: "WebSocket Stress Test"
+    engine: ws
+    flow:
+      - connect: "/"
+      - send:
+          payload: |
+            {
+              "type": "auth",
+              "token": "{{ $testToken }}",
+              "scenario": "{{ $testScenario }}"
+            }
+      - think: 0.5
+
+      # Subscribe to spreadsheet
+      - send:
+          payload: |
+            {
+              "type": "subscribe",
+              "channel": "spreadsheet:{{ $spreadsheetId }}",
+              "events": ["cell:update", "cursor:move", "user:join", "user:leave", "selection:change"]
+            }
+      - think: 1
+
+      # Join session
+      - send:
+          payload: |
+            {
+              "type": "presence:join",
+              "spreadsheetId": "{{ $spreadsheetId }}",
+              "user": {
+                "id": "{{ $userId }}",
+                "name": "Stress User {{ $userId }}",
+                "color": "{{ $randomColor() }}"
+              }
+            }
+
+      # High-frequency collaboration loop
+      - loop:
+          # Rapid cell updates
+          - loop:
+              - send:
+                  payload: |
+                    {
+                      "type": "cell:update",
+                      "spreadsheetId": "{{ $spreadsheetId }}",
+                      "update": {
+                        "row": {{ $randomNumber(0, 99) }},
+                        "col": {{ $randomNumber(0, 25) }},
+                        "value": "stress-{{ $randomString() }}",
+                        "timestamp": {{ $timestamp() }}
+                      }
+                  }
+              - think: 0.2
+            count: 5
+
+          # Cursor movement
+          - send:
+              payload: |
+                {
+                  "type": "cursor:move",
+                  "spreadsheetId": "{{ $spreadsheetId }}",
+                  "position": {
+                    "row": {{ $randomNumber(0, 99) }},
+                    "col": {{ $randomNumber(0, 25) }}
+                  }
+                }
+
+          # Selection change (less frequent)
+          - if: "{{ $randomNumber(0, 10) > 7 }}"
+            then:
+              - send:
+                  payload: |
+                    {
+                      "type": "selection:change",
+                      "spreadsheetId": "{{ $spreadsheetId }}",
+                      "selection": {
+                        "startRow": {{ $randomNumber(0, 90) }},
+                        "startCol": {{ $randomNumber(0, 20) }},
+                        "endRow": {{ $randomNumber(0, 99) }},
+                        "endCol": {{ $randomNumber(0, 25) }}
+                      }
+                    }
+
+          - think: "{{ $randomNumber(0.5, 2) }}"
+
+        count: 30
+
+      # Cleanup
+      - send:
+          payload: |
+            {
+              "type": "unsubscribe",
+              "channel": "spreadsheet:{{ $spreadsheetId }}"
+            }
+      - send:
+          payload: |
+            {
+              "type": "presence:leave",
+              "spreadsheetId": "{{ $spreadsheetId }}"
+            }
+      - think: 0.5
+      - disconnect: true

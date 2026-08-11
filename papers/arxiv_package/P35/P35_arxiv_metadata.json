@@ -1,0 +1,27 @@
+{
+  "title": "Guardian Angel Systems",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.DC",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Safety-critical AI systems (autonomous vehicles, medical devices, industrial control) require proactive failure prevention rather than reactive response. This paper introduces Guardian Angel Systems\u2014shadow monitoring frameworks that predict failures before they occur and execute interventions to prevent them. We demonstrate that guardian angels detect failures 13.7 timesteps in advance (p<0.001), enabling proactive intervention that prevents 84% of predicted failures while ad",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P35",
+  "journal_ref": "",
+  "keywords": [
+    "Fault Tolerance",
+    "Predictive Maintenance",
+    "Shadow Monitoring",
+    "Self-Healing Systems",
+    "AI Safety"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

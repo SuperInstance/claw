@@ -1,0 +1,142 @@
+groups:
+  - name: system_recording
+    interval: 30s
+    rules:
+      # CPU usage by instance
+      - record: instance:cpu_usage:percent
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      # Memory usage by instance
+      - record: instance:memory_usage:percent
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+      # Disk usage by instance
+      - record: instance:disk_usage:percent
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100
+
+      # Network traffic rate
+      - record: instance:network_receive_rate:mbps
+        expr: sum(rate(node_network_receive_bytes_total[5m])) by (instance) * 8 / 1024 / 1024
+
+      - record: instance:network_transmit_rate:mbps
+        expr: sum(rate(node_network_transmit_bytes_total[5m])) by (instance) * 8 / 1024 / 1024
+
+  - name: application_recording
+    interval: 30s
+    rules:
+      # Request rate by service
+      - record: service:request_rate:per_second
+        expr: sum(rate(http_requests_total[5m])) by (service)
+
+      # Error rate by service
+      - record: service:error_rate:percent
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service)) * 100
+
+      # Latency percentiles
+      - record: service:latency:p50
+        expr: histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))
+
+      - record: service:latency:p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))
+
+      - record: service:latency:p99
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))
+
+      # Request rate by endpoint
+      - record: endpoint:request_rate:per_second
+        expr: sum(rate(http_requests_total[5m])) by (service, endpoint)
+
+      # Error rate by endpoint
+      - record: endpoint:error_rate:percent
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) by (service, endpoint) / sum(rate(http_requests_total[5m])) by (service, endpoint)) * 100
+
+      # Latency by endpoint
+      - record: endpoint:latency:p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service, endpoint))
+
+  - name: database_recording
+    interval: 30s
+    rules:
+      # Database query rate
+      - record: database:query_rate:per_second
+        expr: sum(rate(pg_stat_statements_calls_total[5m])) by (datname)
+
+      # Database query duration percentiles
+      - record: database:query_duration:p50
+        expr: histogram_quantile(0.50, sum(rate(pg_query_duration_seconds_bucket[5m])) by (le, datname))
+
+      - record: database:query_duration:p95
+        expr: histogram_quantile(0.95, sum(rate(pg_query_duration_seconds_bucket[5m])) by (le, datname))
+
+      - record: database:query_duration:p99
+        expr: histogram_quantile(0.99, sum(rate(pg_query_duration_seconds_bucket[5m])) by (le, datname))
+
+      # Database connection usage
+      - record: database:connection_usage:percent
+        expr: (pg_stat_activity_count / pg_settings_max_connections) * 100
+
+      # Database cache hit ratio
+      - record: database:cache_hit_ratio:percent
+        expr: (sum(rate(pg_stat_database_blks_hit[5m])) / (sum(rate(pg_stat_database_blks_hit[5m])) + sum(rate(pg_stat_database_blks_read[5m])))) * 100
+
+  - name: business_recording
+    interval: 60s
+    rules:
+      # Daily Active Users (24h rolling window)
+      - record: business:dau:count
+        expr: count(active_users_total) or vector(0)
+
+      # Monthly Active Users (30d rolling window)
+      - record: business:mau:count
+        expr: count(active_users_total) or vector(0)
+
+      # Revenue rate per hour
+      - record: business:revenue_rate:per_hour
+        expr: sum(rate(revenue_total[1h]))
+
+      # Conversion rate
+      - record: business:conversion_rate:percent
+        expr: (sum(rate(conversions_total[1h])) / sum(rate(page_views_total[1h]))) * 100
+
+      # Feature usage rate
+      - record: business:feature_usage:per_second
+        expr: sum(rate(feature_usage_total[5m])) by (feature_name)
+
+      # Cart abandonment rate
+      - record: business:cart_abandonment:percent
+        expr: (sum(rate(cart_abandonments_total[1h])) / sum(rate(cart_creations_total[1h]))) * 100
+
+      # User retention rate
+      - record: business:retention:percent
+        expr: (sum(rate(returning_users_total[7d])) / sum(rate(unique_users_total[7d]))) * 100
+
+  - name: security_recording
+    interval: 30s
+    rules:
+      # Failed authentication rate
+      - record: security:auth_failure_rate:per_second
+        expr: sum(rate(auth_failed_total[5m]))
+
+      # Successful authentication rate
+      - record: security:auth_success_rate:per_second
+        expr: sum(rate(auth_success_total[5m]))
+
+      # Rate limit violations by IP
+      - record: security:rate_limit_violations:per_second
+        expr: sum(rate(rate_limit_exceeded_total[5m])) by (source_ip)
+
+      # SQL injection attempts
+      - record: security:sql_injection_attempts:per_second
+        expr: sum(rate(security_sql_injection_attempts_total[5m]))
+
+      # XSS attempts
+      - record: security:xss_attempts:per_second
+        expr: sum(rate(security_xss_attempts_total[5m]))
+
+      # Blocked requests rate
+      - record: security:blocked_requests:per_second
+        expr: sum(rate(security_blocked_requests_total[5m]))
+
+      # Threat level
+      - record: security:threat_level:score
+        expr: sum(rate(auth_failed_total[5m])) * 0.3 + sum(rate(security_sql_injection_attempts_total[5m])) * 0.4 + sum(rate(severity_xss_attempts_total[5m])) * 0.3

@@ -1,0 +1,264 @@
+# Spreadsheet Moment - Logging Stack (ELK)
+# Filebeat for centralized logging and analysis
+
+# Includes Elasticsearch, Fluent Bit (log collector), and Kibana for log aggregation
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logging
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: logging
+---
+# Elasticsearch Stateful deployment with persistence
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: logging
+  labels:
+    app: elasticsearch
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: logging
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch:8.5.0
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: transport
+        env:
+        - name: node.name
+          value: es01
+        - name: cluster.name
+          value: elasticsearch
+        - name: discovery.type
+          value: single-node
+        - name: ES_JAVA_OPTS
+          valueFrom:
+            configMapKeyRef:
+              name: elasticsearch-config
+              key: ES_JAVA_OPTS
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "8Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: 9200
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+---
+# Kibana for log ingestion andapiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  namespace: logging
+  labels:
+    app: logstash
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: logging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash:8.5.0
+        ports:
+        - containerPort: 5044
+          name: http
+        env:
+        - name: LS_JAVA_OPTS
+          value: "-Xms.monitoring.elasticsearch.hosts=elasticsearch"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+health
+            port: 5044
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: logstash-config
+          mountPath: /usr/share/logstash/pipeline
+          readOnly: true
+---
+# Logstash Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: logging
+  labels:
+    app: logstash
+data:
+  logstash.yml: |-
+    input {
+      beats {
+        port => 5044
+      type => tcp
+    }
+    output {
+      if [type] == "debug" {
+        codec => rubydebug
+        metadata => [severity, "debug"]
+      }
+    }
+  output {
+      elasticsearch {
+        hosts => ["elasticsearch:9200"]
+        index => "spreadsheet-moment"
+      manage_template => {
+        name => "spreadsheet-moment"
+        pattern => "%{[@metadata][kubernetes][namespace]} == 'spreadsheet-moment'"
+        id => "%{[@metadata][kubernetes][pod][name]}"
+        document_id => "%{[kubernetes][namespace]}"
+        type => "%{[kubernetes][type]}"
+      }
+    }
+  }
+}
+---
+# Kibana for dashboard visualization
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: logging
+  labels:
+    app: kibana
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: visualization
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana:8.5.1
+        ports:
+        - containerPort: 5601
+          name: http
+        env:
+        - name: ELASTICSEARCH_HOSTS
+          value: "elasticsearch"
+        - name: XPACK_SECURITY_enabled
+          value: "true"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 5601
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: kibana-config
+          mountPath: /usr/share/kibana/config
+          readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: logging
+  labels:
+    app: elasticsearch
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+      name: http
+  selector:
+    app: elasticsearch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  namespace: logging
+  labels:
+    app: logstash
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5044
+      targetPort: 5044
+      name: http
+  selector:
+    app: logstash
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: logging
+  labels:
+    app: kibana
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5601
+      targetPort: 5601
+      name: http
+  selector:
+    app: kibana

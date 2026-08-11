@@ -1,0 +1,162 @@
+# Discourse Forums Deployment for SuperInstance Community
+# Production-ready configuration with PostgreSQL and Redis
+
+version: '3.8'
+
+services:
+  # ========================================================================
+  # Discourse Application Container
+  # ========================================================================
+  discourse-app:
+    image: discourse/base:release
+    container_name: discourse-app
+    hostname: discourse
+    restart: always
+    links:
+      - discourse-postgres
+      - discourse-redis
+    ports:
+      - "80:80"   # HTTP
+      - "443:443" # HTTPS
+    environment:
+      # Discourse Configuration
+      - DISCOURSE_DEVELOPER_EMAILS=admin@superinstance.ai
+      - DISCOURSE_HOSTNAME=community.superinstance.ai
+      - DISCOURSE_SMTP_ADDRESS=smtp.resend.com
+      - DISCOURSE_SMTP_PORT=587
+      - DISCOURSE_SMTP_USER_NAME=apikey
+      - DISCOURSE_SMTP_PASSWORD=${SMTP_PASSWORD}
+      - DISCOURSE_SMTP_AUTHENTICATION=plain
+      - DISCOURSE_SMTP_ENABLE_STARTTLS=true
+
+      # Database Configuration
+      - DISCOURSE_DB_HOST=discourse-postgres
+      - DISCOURSE_DB_USERNAME=discourse
+      - DISCOURSE_DB_PASSWORD=${DISCOURSE_DB_PASSWORD}
+      - DISCOURSE_DB_NAME=discourse
+
+      # Redis Configuration
+      - DISCOURSE_REDIS_HOST=discourse-redis
+
+      # S3 Configuration (for backups and uploads)
+      - DISCOURSE_S3_BUCKET=superinstance-community
+      - DISCOURSE_S3_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - DISCOURSE_S3_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DISCOURSE_S3_REGION=us-east-1
+      - DISCOURSE_BACKUP_LOCATION=s3
+
+      # Security Configuration
+      - DISCOURSE_MAX_REQS_PER Minute=1000
+      - DISCOURSE_MAX_REQS_PER_IP_MODE=rate
+
+      # Plugin Configuration
+      - DISCOURSE_PLUGINS=discourse-solved discourse-assign discourse-gamification discourse-signatures
+
+    volumes:
+      - discourse-shared:/shared
+      - discourse-config:/config
+
+    env_file:
+      - .env.discourse
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ========================================================================
+  # PostgreSQL Database for Discourse
+  # ========================================================================
+  discourse-postgres:
+    image: postgres:15-alpine
+    container_name: discourse-postgres
+    hostname: postgres
+    restart: always
+
+    environment:
+      - POSTGRES_DB=discourse
+      - POSTGRES_USER=discourse
+      - POSTGRES_PASSWORD=${DISCOURSE_DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+    volumes:
+      - discourse-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U discourse -d discourse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # Redis for Discourse
+  # ========================================================================
+  discourse-redis:
+    image: redis:7-alpine
+    container_name: discourse-redis
+    hostname: redis
+    restart: always
+
+    volumes:
+      - discourse-redis-data:/data
+
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # Sidekiq Background Worker for Discourse
+  # ========================================================================
+  discourse-sidekiq:
+    image: discourse/base:release
+    container_name: discourse-sidekiq
+    hostname: sidekiq
+    restart: always
+
+    links:
+      - discourse-postgres
+      - discourse-redis
+
+    environment:
+      - DISCOURSE_DB_HOST=discourse-postgres
+      - DISCOURSE_DB_USERNAME=discourse
+      - DISCOURSE_DB_PASSWORD=${DISCOURSE_DB_PASSWORD}
+      - DISCOURSE_DB_NAME=discourse
+      - DISCOURSE_REDIS_HOST=discourse-redis
+
+    volumes:
+      - discourse-shared:/shared
+      - discourse-config:/config
+
+    command: >
+      bundle exec sidekiq
+      -C config/sidekiq.yml
+      -e production
+
+    depends_on:
+      - discourse-app
+
+volumes:
+  discourse-shared:
+    name: discourse-shared-data
+  discourse-config:
+    name: discourse-config
+  discourse-postgres-data:
+    name: discourse-postgres-data
+  discourse-redis-data:
+    name: discourse-redis-data
+
+networks:
+  default:
+    name: discourse-network
+    driver: bridge

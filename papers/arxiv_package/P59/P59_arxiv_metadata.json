@@ -1,0 +1,27 @@
+{
+  "title": "Swarm Coordination",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.MA",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present Swarm Coordination for Neural Inference, a framework for emergent collective intelligence in multiple mask-locked inference cartridges operating in parallel. By enabling plug-and-play hardware cartridges to coordinate through stigmergic communication (indirect signaling via shared state), ELO-based task allocation, and competitive coevolution, we demonstrate: (1) 30% collective performance improvement vs. isolated units, (2) automatic task partitionin",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P59",
+  "journal_ref": "",
+  "keywords": [
+    "Swarm Intelligence",
+    "Stigmergy",
+    "Neural Inference",
+    "Cartridge Architecture",
+    "ELO Rating"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

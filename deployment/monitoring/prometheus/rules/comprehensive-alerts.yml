@@ -1,0 +1,555 @@
+groups:
+  # API and Application Alerts
+  - name: api_performance_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (endpoint)
+          /
+          sum(rate(http_requests_total[5m])) by (endpoint)
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+          team: backend
+        annotations:
+          summary: "High error rate detected on {{ $labels.endpoint }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for endpoint {{ $labels.endpoint }}"
+          runbook_url: "https://runbooks.superinstance.ai/api/high-error-rate"
+          dashboard_url: "https://monitoring.superinstance.ai/d/api-performance"
+
+      - alert: VeryHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[2m])) by (endpoint)
+          /
+          sum(rate(http_requests_total[2m])) by (endpoint)
+          > 0.15
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+          team: backend
+        annotations:
+          summary: "Critical error rate on {{ $labels.endpoint }}"
+          description: "Error rate is {{ $value | humanizePercentage }} - immediate attention required"
+          runbook_url: "https://runbooks.superinstance.ai/api/critical-error-rate"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (endpoint, le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+          team: backend
+        annotations:
+          summary: "High P95 latency on {{ $labels.endpoint }}"
+          description: "P95 latency is {{ $value }}s for endpoint {{ $labels.endpoint }}"
+          runbook_url: "https://runbooks.superinstance.ai/api/high-latency"
+
+      - alert: CriticalLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[2m])) by (endpoint, le)
+          ) > 2
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+          team: backend
+        annotations:
+          summary: "Critical P99 latency on {{ $labels.endpoint }}"
+          description: "P99 latency is {{ $value }}s - users experiencing significant delays"
+          runbook_url: "https://runbooks.superinstance.ai/api/critical-latency"
+
+      - alert: LowRequestRate
+        expr: |
+          sum(rate(http_requests_total[5m])) by (endpoint) < 1
+        for: 15m
+        labels:
+          severity: info
+          component: api
+          team: backend
+        annotations:
+          summary: "Low request rate on {{ $labels.endpoint }}"
+          description: "Request rate is {{ $value }} req/s for endpoint {{ $labels.endpoint }}"
+
+      - alert: NoRequests
+        expr: |
+          sum(rate(http_requests_total[2m])) by (endpoint) == 0
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+          team: backend
+        annotations:
+          summary: "No requests on {{ $labels.endpoint }}"
+          description: "No requests received in the last 5 minutes - possible service disruption"
+
+  # Worker and GPU Alerts
+  - name: worker_alerts
+    interval: 30s
+    rules:
+      - alert: GPUUnderutilized
+        expr: avg(nvidia_gpu_utilization) < 30
+        for: 20m
+        labels:
+          severity: info
+          component: worker
+          team: infrastructure
+        annotations:
+          summary: "GPU underutilized"
+          description: "GPU utilization is {{ $value }}% - consider scaling down"
+          runbook_url: "https://runbooks.superinstance.ai/worker/gpu-underutilized"
+
+      - alert: HighGPUMemory
+        expr: |
+          sum(nvidia_gpu_memory_used_bytes) / sum(nvidia_gpu_memory_total_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: worker
+          team: infrastructure
+        annotations:
+          summary: "High GPU memory usage"
+          description: "GPU memory usage is {{ $value | humanizePercentage }} - risk of OOM"
+          runbook_url: "https://runbooks.superinstance.ai/worker/high-gpu-memory"
+
+      - alert: GPUTemperatureHigh
+        expr: avg(nvidia_gpu_temperature) > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: worker
+          team: infrastructure
+        annotations:
+          summary: "High GPU temperature"
+          description: "GPU temperature is {{ $value }}°C - thermal throttling risk"
+          runbook_url: "https://runbooks.superinstance.ai/worker/gpu-temperature"
+
+      - alert: GPUTemperatureCritical
+        expr: avg(nvidia_gpu_temperature) > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: worker
+          team: infrastructure
+        annotations:
+          summary: "Critical GPU temperature"
+          description: "GPU temperature is {{ $value }}°C - immediate action required"
+          runbook_url: "https://runbooks.superinstance.ai/worker/gpu-temperature-critical"
+
+      - alert: WorkerQueueFull
+        expr: worker_queue_length > 1000
+        for: 5m
+        labels:
+          severity: critical
+          component: worker
+          team: backend
+        annotations:
+          summary: "Worker queue is full"
+          description: "Queue length is {{ $value }} - work is backing up"
+          runbook_url: "https://runbooks.superinstance.ai/worker/queue-full"
+
+      - alert: WorkerQueueGrowing
+        expr: |
+          rate(worker_queue_length[5m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: worker
+          team: backend
+        annotations:
+          summary: "Worker queue growing rapidly"
+          description: "Queue growing at {{ $value }} items/sec - add workers"
+
+  # Infrastructure Alerts
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: |
+          sum(rate(process_cpu_seconds_total[5m])) by (instance) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.superinstance.ai/infrastructure/high-cpu"
+
+      - alert: CriticalCPUUsage
+        expr: |
+          sum(rate(process_cpu_seconds_total[2m])) by (instance) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }} - system overloaded"
+          runbook_url: "https://runbooks.superinstance.ai/infrastructure/critical-cpu"
+
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.superinstance.ai/infrastructure/high-memory"
+
+      - alert: LowDiskSpace
+        expr: |
+          node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is {{ $value | humanizePercentage }} - cleanup or expand"
+          runbook_url: "https://runbooks.superinstance.ai/infrastructure/low-disk-space"
+
+      - alert: VeryLowDiskSpace
+        expr: |
+          node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Disk space is {{ $value | humanizePercentage }} - immediate action required"
+
+      - alert: HighNetworkLatency
+        expr: |
+          avg(rate(node_net_latency_seconds[5m])) by (instance) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+          team: sre
+        annotations:
+          summary: "High network latency on {{ $labels.instance }}"
+          description: "Network latency is {{ $value }}s"
+
+      - alert: PodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total[1h]) > 0
+        for: 15m
+        labels:
+          severity: warning
+          component: kubernetes
+          team: sre
+        annotations:
+          summary: "Pod {{ $labels.pod }} is crash looping"
+          description: "Pod has restarted {{ $value }} times in the last hour"
+          runbook_url: "https://runbooks.superinstance.ai/kubernetes/pod-crash-looping"
+
+  # Database Alerts
+  - name: database_alerts
+    interval: 30s
+    rules:
+      - alert: PostgresConnectionPoolExhausted
+        expr: |
+          pg_stat_activity_count / pg_settings_max_connections > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+          team: backend
+        annotations:
+          summary: "PostgreSQL connection pool nearly exhausted"
+          description: "Connection usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.superinstance.ai/database/postgres-connections"
+
+      - alert: SlowPostgresQueries
+        expr: |
+          avg(rate(pg_stat_statements_mean_exec_time_ms[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          team: backend
+        annotations:
+          summary: "Slow PostgreSQL queries detected"
+          description: "Average query time is {{ $value }}ms"
+          runbook_url: "https://runbooks.superinstance.ai/database/slow-queries"
+
+      - alert: PostgresReplicationLag
+        expr: |
+          pg_stat_replication_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          team: backend
+        annotations:
+          summary: "PostgreSQL replication lag detected"
+          description: "Replication lag is {{ $value }}s"
+          runbook_url: "https://runbooks.superinstance.ai/database/replication-lag"
+
+      - alert: RedisConnectionErrors
+        expr: |
+          rate(redis_connections_failed_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+          team: backend
+        annotations:
+          summary: "Redis connection errors detected"
+          description: "Connection error rate is {{ $value }}/s"
+          runbook_url: "https://runbooks.superinstance.ai/database/redis-errors"
+
+      - alert: RedisMemoryHigh
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+          team: backend
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.superinstance.ai/database/redis-memory"
+
+      - alert: LowRedisHitRate
+        expr: |
+          rate(redis_keyspace_hits_total[5m])
+          /
+          (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+          < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+          team: backend
+        annotations:
+          summary: "Low Redis cache hit rate"
+          description: "Hit rate is {{ $value | humanizePercentage }} - cache may be ineffective"
+
+  # Uptime and Availability Alerts
+  - name: uptime_alerts
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: uptime
+          team: sre
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} is down"
+          runbook_url: "https://runbooks.superinstance.ai/uptime/service-down"
+
+      - alert: EndpointDown
+        expr: |
+          probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: uptime
+          team: sre
+        annotations:
+          summary: "Endpoint {{ $labels.instance }} is down"
+          description: "Health check failing for {{ $labels.instance }}"
+          runbook_url: "https://runbooks.superinstance.ai/uptime/endpoint-down"
+
+      - alert: PodNotReady
+        expr: |
+          kube_pod_status_ready{condition="false"} == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: kubernetes
+          team: sre
+        annotations:
+          summary: "Pod {{ $labels.pod }} not ready"
+          description: "Pod in namespace {{ $labels.namespace }} is not ready"
+          runbook_url: "https://runbooks.superinstance.ai/kubernetes/pod-not-ready"
+
+      - alert: DeploymentRolloutFailed
+        expr: |
+          kube_deployment_status_replicas_unavailable > 0
+        for: 10m
+        labels:
+          severity: critical
+          component: kubernetes
+          team: sre
+        annotations:
+          summary: "Deployment {{ $labels.deployment }} rollout failed"
+          description: "Unavailable replicas: {{ $value }}"
+          runbook_url: "https://runbooks.superinstance.ai/kubernetes/rollout-failed"
+
+  # Business Logic Alerts
+  - name: business_alerts
+    interval: 1m
+    rules:
+      - alert: HighTaskFailureRate
+        expr: |
+          sum(rate(worker_tasks_failed_total[5m]))
+          /
+          sum(rate(worker_tasks_total[5m]))
+          > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: business
+          team: backend
+        annotations:
+          summary: "High task failure rate"
+          description: "Task failure rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.superinstance.ai/business/task-failures"
+
+      - alert: ZeroActiveUsers
+        expr: |
+          sum(active_users_total) == 0
+        for: 30m
+        labels:
+          severity: info
+          component: business
+          team: product
+        annotations:
+          summary: "No active users detected"
+          description: "No user activity in the last 30 minutes"
+
+      - alert: HighFailedLogins
+        expr: |
+          sum(rate(auth_login_failures_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          team: security
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "{{ $value }} failed logins per second"
+          runbook_url: "https://runbooks.superinstance.ai/security/failed-logins"
+
+      - alert: BillingError
+        expr: |
+          sum(rate(billing_errors_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: business
+          team: finance
+        annotations:
+          summary: "Billing errors detected"
+          description: "{{ $value }} billing errors per second"
+          runbook_url: "https://runbooks.superinstance.ai/business/billing-errors"
+
+  # Security Alerts
+  - name: security_alerts
+    interval: 30s
+    rules:
+      - alert: UnauthorizedAccessAttempts
+        expr: |
+          sum(rate(http_requests_total{status="401"}[5m])) > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          team: security
+        annotations:
+          summary: "High rate of unauthorized access attempts"
+          description: "{{ $value }} unauthorized requests per second"
+          runbook_url: "https://runbooks.superinstance.ai/security/unauthorized-access"
+
+      - alert: ForbiddenAccessAttempts
+        expr: |
+          sum(rate(http_requests_total{status="403"}[5m])) > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          team: security
+        annotations:
+          summary: "High rate of forbidden access attempts"
+          description: "{{ $value }} forbidden requests per second"
+          runbook_url: "https://runbooks.superinstance.ai/security/forbidden-access"
+
+      - alert: RateLimitExceeded
+        expr: |
+          sum(rate(http_requests_total{status="429"}[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          team: backend
+        annotations:
+          summary: "High rate of rate limit errors"
+          description: "{{ $value }} rate-limited requests per second"
+          runbook_url: "https://runbooks.superinstance.ai/security/rate-limits"
+
+  # SLO and SLI Alerts
+  - name: slo_alerts
+    interval: 1m
+    rules:
+      - alert: SLOErrorBudgetBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          )
+          > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: slo
+          team: sre
+        annotations:
+          summary: "Error budget burning too fast"
+          description: "Current error rate {{ $value | humanizePercentage }} exceeds SLO budget (1%)"
+          runbook_url: "https://runbooks.superinstance.ai/slo/error-budget"
+
+      - alert: SLOLatencyBudgetBurn
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: slo
+          team: sre
+        annotations:
+          summary: "Latency budget at risk"
+          description: "P95 latency {{ $value }}s exceeds SLO target (500ms)"
+          runbook_url: "https://runbooks.superinstance.ai/slo/latency-budget"
+
+      - alert: WeeklyAvailabilityDrop
+        expr: |
+          (
+            sum(increase(http_requests_total{status=~"2.."}[7d]))
+            /
+            sum(increase(http_requests_total[7d]))
+          ) < 0.99
+        for: 1m
+        labels:
+          severity: critical
+          component: slo
+          team: sre
+        annotations:
+          summary: "Weekly availability below SLO"
+          description: "Current availability {{ $value | humanizePercentage }} below target (99%)"
+          runbook_url: "https://runbooks.superinstance.ai/slo/availability"

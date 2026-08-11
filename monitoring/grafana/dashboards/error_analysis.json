@@ -1,0 +1,565 @@
+{
+  "dashboard": {
+    "title": "Spreadsheet Moment - Error Analysis",
+    "tags": ["errors", "incidents", "mttr"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Error Rate by Type",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m])) by (status)",
+            "legendFormat": "4xx - {{status}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (status)",
+            "legendFormat": "5xx - {{status}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "eps", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate by Service",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "service:error_rate:percent",
+            "legendFormat": "{{service}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Error Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Frequency by Endpoint",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "topk(20, sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (endpoint))",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "endpoint": "Endpoint",
+                "Value": "Error Rate"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "left"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "orange"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "HTTP Status Code Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total[1h])) by (status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right"
+          },
+          "pieType": "donut",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Error Trend",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+            "legendFormat": "Server Errors (5xx)",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"4..\"}[5m]))",
+            "legendFormat": "Client Errors (4xx)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "eps", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Top Error Messages",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 26},
+        "targets": [
+          {
+            "expr": "topk(20, sum(rate(error_occurrences_total[5m])) by (error_type, error_message))",
+            "legendFormat": "{{error_type}} - {{error_message}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "error_type": "Error Type",
+                "error_message": "Error Message",
+                "Value": "Occurrences"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Error Impact Score",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[5m])) * 10 + sum(rate(http_requests_total{status=~\"4..\"}[5m]))) * service:latency:p95",
+            "legendFormat": "Impact Score",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 30, "color": "yellow"},
+                {"value": 60, "color": "orange"},
+                {"value": 80, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Mean Time To Recovery (MTTR)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36},
+        "targets": [
+          {
+            "expr": "avg(incident_recovery_duration_seconds)",
+            "legendFormat": "MTTR",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "m", "label": "Time to Recovery"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Error Rate vs Response Time",
+        "type": "xychart",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 44},
+        "targets": [
+          {
+            "expr": "service:error_rate:percent",
+            "legendFormat": "Error Rate",
+            "refId": "A",
+            "xAxis": "service:latency:p95"
+          }
+        ],
+        "options": {
+          "series": [
+            {
+              "axis": "center",
+              "colorMode": "palette-classic",
+              "label": "Error Rate vs Latency",
+              "xAxis": "latency",
+              "yAxis": "errors"
+            }
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "title": "Recent Incidents",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 44},
+        "targets": [
+          {
+            "expr": "incident_total",
+            "legendFormat": "{{incident_id}}",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "incident_severity",
+            "legendFormat": "Severity",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "incident_recovery_duration_seconds",
+            "legendFormat": "Recovery Time",
+            "refId": "C",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "incident_id": "Incident ID",
+                "incident_severity": "Severity",
+                "incident_recovery_duration_seconds": "Recovery Time (s)"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "left"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 300, "color": "yellow"},
+                {"value": 1800, "color": "orange"},
+                {"value": 3600, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Error Stack Trace Analysis",
+        "type": "logs",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 54},
+        "targets": [
+          {
+            "expr": "{level=\"error\"}",
+            "legendFormat": "{{stack_trace}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showLabels": false,
+          "showTime": true,
+          "sortOrder": "Descending",
+          "wrapLogMessage": false
+        }
+      },
+      {
+        "id": 12,
+        "title": "Error Heatmap",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 64},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (service, endpoint)",
+            "legendFormat": "{{service}} - {{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "calculate": false,
+          "cellGap": 2,
+          "cellRadius": 0,
+          "cellValues": {},
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "spectrum",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "Oranges",
+            "steps": 128
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-9
+          },
+          "legend": {
+            "show": true
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Error Budget Burn Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 64},
+        "targets": [
+          {
+            "expr": "(1 - (sum(rate(http_requests_total{status=~\"2..\"}[5m])) / sum(rate(http_requests_total[5m])))) * 100",
+            "legendFormat": "Error Budget Burn",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "orange"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "SLO Status",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 0, "y": 72},
+        "targets": [
+          {
+            "expr": "avg_over_time(slo_availability_percent[30d])",
+            "legendFormat": "30d Availability",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 99, "color": "yellow"},
+                {"value": 99.9, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Error Budget Remaining",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 6, "y": 72},
+        "targets": [
+          {
+            "expr": "slo_error_budget_remaining_percent",
+            "legendFormat": "Budget Remaining",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "title": "Incident Response Time",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 12, "y": 72},
+        "targets": [
+          {
+            "expr": "avg(incident_response_duration_seconds)",
+            "legendFormat": "Response Time",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 15, "color": "orange"},
+                {"value": 30, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Incident Escalation Rate",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 18, "y": 72},
+        "targets": [
+          {
+            "expr": "(sum(rate(incident_escalated_total[1h])) / sum(rate(incident_created_total[1h]))) * 100",
+            "legendFormat": "Escalation Rate",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 25, "color": "orange"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

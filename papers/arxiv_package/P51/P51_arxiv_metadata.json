@@ -1,0 +1,27 @@
+{
+  "title": "Mask-Locked Type Systems",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.PL",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We introduce mask-locked type systems, where neural network type constraints are physically enforced through metal-layer weight encoding during chip manufacturing. By committing types to silicon at manufacture time, we achieve: (1) zero runtime type checking overhead, (2) guaranteed type safety through physical impossibility of violations, (3) 50\u00d7 energy efficiency vs. software type checking. We demonstrate ternary type systems {-1, 0, +1} embedded in 28nm CMOS with 0.12 \u03bcm",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P51",
+  "journal_ref": "",
+  "keywords": [
+    "Type Systems",
+    "Hardware Security",
+    "VLSI Design",
+    "Neural Networks",
+    "Ternary Logic"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

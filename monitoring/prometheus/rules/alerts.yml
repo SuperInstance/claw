@@ -1,0 +1,267 @@
+groups:
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for instance {{ $labels.instance }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/high-cpu"
+
+      # Critical CPU Usage
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is above 95% for instance {{ $labels.instance }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/critical-cpu"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for instance {{ $labels.instance }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/high-memory"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "Disk space running low"
+          description: "Disk space is below 20% for instance {{ $labels.instance }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/disk-space"
+
+      # Disk Space Critical
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+          category: capacity
+        annotations:
+          summary: "Critical disk space"
+          description: "Disk space is below 10% for instance {{ $labels.instance }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/critical-disk"
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+          category: application
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for service {{ $labels.service }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/high-error-rate"
+
+      # Critical Error Rate
+      - alert: CriticalErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100 > 15
+        for: 1m
+        labels:
+          severity: critical
+          category: application
+        annotations:
+          summary: "Critical error rate"
+          description: "Error rate is above 15% for service {{ $labels.service }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/critical-error-rate"
+
+      # High Latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High latency detected"
+          description: "P95 latency is above 1s for service {{ $labels.service }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/high-latency"
+
+      # Critical Latency
+      - alert: CriticalLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 3
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical latency"
+          description: "P95 latency is above 3s for service {{ $labels.service }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/critical-latency"
+
+      # Service Down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service is down"
+          description: "Service {{ $labels.service }} on instance {{ $labels.instance }} is down"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/service-down"
+
+      # Low Request Rate
+      - alert: LowRequestRate
+        expr: sum(rate(http_requests_total[5m])) by (service) < 10
+        for: 10m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Unusually low request rate"
+          description: "Request rate for service {{ $labels.service }} is below 10 req/s"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/low-request-rate"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Database Connection Pool Exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_activity_count{datname="spreadsheet_moment"} / pg_settings_max_connections > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection usage is above 90% for database {{ $labels.datname }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/db-pool-exhausted"
+
+      # High Database Query Duration
+      - alert: HighDatabaseQueryDuration
+        expr: histogram_quantile(0.95, sum(rate(pg_query_duration_seconds_bucket[5m])) by (le, datname)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High database query duration"
+          description: "P95 database query duration is above 5s for database {{ $labels.datname }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/slow-queries"
+
+      # Database Replication Lag
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Database replication lag detected"
+          description: "Replication lag is above 30 seconds"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/replication-lag"
+
+  - name: security_alerts
+    interval: 30s
+    rules:
+      # High Failed Authentication Rate
+      - alert: HighFailedAuthenticationRate
+        expr: sum(rate(auth_failed_total[5m])) / sum(rate(auth_attempts_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High failed authentication rate"
+          description: "Failed authentication rate is above 10%"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/high-auth-failures"
+
+      # Possible Brute Force Attack
+      - alert: PossibleBruteForceAttack
+        expr: sum(rate(auth_failed_total[1m])) by (source_ip) > 10
+        for: 2m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Possible brute force attack"
+          description: "High rate of failed authentications from IP {{ $labels.source_ip }}"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/brute-force"
+
+      # SQL Injection Attempts
+      - alert: SQLInjectionAttempts
+        expr: sum(rate(security_sql_injection_attempts_total[5m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "SQL injection attempts detected"
+          description: "SQL injection attempts detected"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/sql-injection"
+
+      # Rate Limit Violations
+      - alert: HighRateLimitViolations
+        expr: sum(rate(rate_limit_exceeded_total[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High rate limit violations"
+          description: "More than 100 rate limit violations per second"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/rate-limit"
+
+  - name: business_alerts
+    interval: 60s
+    rules:
+      # Low Active Users
+      - alert: LowActiveUsers
+        expr: active_users_total < 50
+        for: 15m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Unusually low active users"
+          description: "Active user count is below 50"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/low-users"
+
+      # Zero Revenue
+      - alert: ZeroRevenue
+        expr: rate(revenue_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "No revenue generated"
+          description: "No revenue has been generated in the last 2 hours"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/zero-revenue"
+
+      # High Cart Abandonment
+      - alert: HighCartAbandonmentRate
+        expr: (cart_abandonments_total / cart_creations_total) > 0.7
+        for: 1h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "High cart abandonment rate"
+          description: "Cart abandonment rate is above 70%"
+          runbook: "https://docs.spreadsheetmoment.com/runbooks/cart-abandonment"

@@ -1,0 +1,548 @@
+# Spreadsheet Moment - Production Monitoring Stack
+# Prometheus Operator + Grafana + Alertmanager
+
+---
+# Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/version: 2.45.0
+spec:
+  serviceAccountName: prometheus
+  serviceMonitor:
+    self: true
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  storage:
+    volumeClaimTemplate:
+    - metadata:
+        name: prometheus-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 50Gi
+  volumeMounts:
+    - name: prometheus-config
+      mountPath: /etc/prometheus
+      readOnly: true
+    - name: prometheus-storage
+      mountPath: /prometheus
+    - name: prometheus-rules
+      mountPath: /etc/prometheus/rules
+      readOnly: true
+  containers:
+    - name: prometheus
+      image: prom/prometheus:v2.45.0
+      args:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus"
+        - "--storage.tsdb.retention.time=15d"
+        - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+        - "--web.console.templates=/usr/share/prometheus/consoles"
+        - "--web.enable-lifecycle"
+        - "--web.enable-admin-api"
+      ports:
+        - name: http
+          containerPort: 9090
+          protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /-/healthy
+          port: 9090
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readinessProbe:
+        httpGet:
+          path: /-/ready
+          port: 9090
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+      volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+          readOnly: true
+        - name: prometheus-storage
+          mountPath: /prometheus
+        - name: prometheus-rules
+          mountPath: /etc/prometheus/rules
+          readOnly: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+  volumes:
+    - name: prometheus-config
+      configMap:
+        name: prometheus-config
+        namespace: monitoring
+    - name: prometheus-storage
+      persistentVolumeClaim:
+        claimName: prometheus-storage
+    - name: prometheus-rules
+      configMap:
+        name: prometheus-alert-rules
+        namespace: monitoring
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: prometheus
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: prometheus
+---
+# Grafana
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: grafana
+spec:
+  serviceAccountName: grafana
+  serviceMonitor:
+    self: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  storage:
+    volumeClaimTemplate:
+    - metadata:
+        name: grafana-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 10Gi
+  volumeMounts:
+    - name: grafana-storage
+      mountPath: /var/lib/grafana
+    - name: grafana-datasources
+      mountPath: /etc/grafana/provisioning/datasources
+      readOnly: true
+    - name: grafana-dashboards
+      mountPath: /etc/grafana/provisioning/dashboards
+      readOnly: true
+  containers:
+    - name: grafana
+      image: grafana/grafana:10.0.0
+      ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+      env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: admin
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: monitoring-secrets
+              key: grafana-password
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_SERVER_ROOT_URL
+          value: "%(protocol)s://%(name)s)"
+        - name: GF_INSTALL_PLUGINS
+          value: "grafana-clock-panel,
+      livenessProbe:
+        httpGet:
+          path: /api/health
+          port: 3000
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readinessProbe:
+        httpGet:
+          path: /api/health
+          port: 3000
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+          readOnly: true
+        - name: grafana-dashboards
+          mountPath: /etc/grafana/provisioning/dashboards
+          readOnly: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        fsGroup: 472
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+  volumes:
+    - name: grafana-storage
+      persistentVolumeClaim:
+        claimName: grafana-storage
+    - name: grafana-datasources
+      configMap:
+        name: grafana-datasources
+        namespace: monitoring
+    - name: grafana-dashboards
+      configMap:
+        name: grafana-dashboards
+        namespace: monitoring
+---
+# Grafana Datasources ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: "15s"
+          httpMethod: POST
+---
+# Grafana Dashboards ConfigMap (Prebuilt dashboards)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: grafana
+data:
+  api-overview.json: |
+    {
+      "dashboard": "Spreadsheet Moment API Overview",
+      "uid": "api-overview",
+      "tags": ["api", "spreadsheet-moment", "production"],
+      "timezone": "browser",
+      "editable": true,
+      "graphTooltip": {
+        "title": "API Metrics",
+        "show": true
+      },
+      "panels": [
+        {
+          "title": "Request Rate",
+          "type": "graph",
+          "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "rate(http_requests_total[5m])",
+              "legendFormat": "{{.method}} - {{.status}}"
+            }
+          ]
+        },
+        {
+          "title": "Response Time",
+          "type": "graph",
+          "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "histogram_quantile(http_request_duration_seconds_bucket[5m])",
+              "legendFormat": "{{.le}}"
+            }
+          ]
+        },
+        {
+          "title": "Error Rate",
+          "type": "graph",
+          "gridPos": {"x": 0, "y": 8, "w": 12, "h": 4},
+          "targets": [
+            {
+              "expr": "rate(http_requests_total{status=~\"5..\"} [5m])",
+              "legendFormat": "{{.status}}"
+            }
+          ]
+        }
+      ]
+    }
+  infrastructure-overview.json: |
+    {
+      "dashboard": "Infrastructure Overview",
+      "uid": "infrastructure-overview",
+      "tags": ["infrastructure", "spreadsheet-moment", "production"],
+      "timezone": "browser",
+      "editable": true,
+      "panels": [
+        {
+          "title": "CPU Usage",
+          "type": "graph",
+          "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "rate(container_cpu_usage_seconds_total[5m])",
+              "legendFormat": "{{.pod}}"
+            }
+          ]
+        },
+        {
+          "title": "Memory Usage",
+          "type": "graph",
+          "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+          "targets": [
+            {
+              "expr": "rate(container_memory_usage_bytes[5m])",
+              "legendFormat": "{{.pod}}"
+            }
+          ]
+        }
+      ]
+    }
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: grafana
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: grafana
+---
+# Alertmanager
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: Alertmanager
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: alertmanager
+spec:
+  serviceAccountName: alertmanager
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  alertmanagerConfig:
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: 'smtp.example.com:587'
+      smtp_from: 'alertmanager@spreadsheet-moment.io'
+      smtp_require_tls: true
+    route:
+      group_by: ['alertname', 'severity']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: 'email-notifications'
+      routes:
+        - match:
+            severity: critical
+          receiver: 'email-notifications'
+          continue: false
+        - match:
+            severity: warning
+          receiver: 'email-notifications'
+          continue: false
+    receivers:
+      - name: 'email-notifications'
+        email_configs:
+          - to: 'ops@spreadsheet-moment.io'
+            send_resolved: true
+---
+# Alertmanager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: alertmanager
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9093
+      targetPort: 9093
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: alertmanager
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: spreadsheet-moment-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: prometheus
+spec:
+  groups:
+    - name: spreadsheet-moment.rules
+      rules:
+        # High Error Rate Alert
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="graphql-api",status=~"5.."}[5m])) by (sum(rate(http_requests_total{job="graphql-api"}[5m]))) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High error rate on GraphQL API
+            description: "Error rate is above 10% for the last 5 minutes"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/high-error-rate"
+
+        # Service Down Alert
+        - alert: ServiceDown
+          expr: up{job="graphql-api"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: GraphQL API service is down
+            description: "GraphQL API has been down for more than 1 minute"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/service-down"
+
+        # High Memory Usage Alert
+        - alert: HighMemoryUsage
+          expr: |
+            container_memory_usage_bytes{namespace="spreadsheet-moment"} / container_spec_memory_limit_bytes > 0.9
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Container is using high memory
+            description: "Container memory usage is above 90% of limit"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/high-memory"
+
+        # Database Connection Alert
+        - alert: DatabaseConnectionFailed
+          expr: |
+            pg_up{job="postgres"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: PostgreSQL database is unreachable
+            description: "PostgreSQL has been unreachable for more than 1 minute"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/database-down"
+
+        # Redis Connection Alert
+        - alert: RedisConnectionFailed
+          expr: |
+            redis_up{job="redis"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: Redis cache is unreachable
+            description: "Redis has been unreachable for more than 1 minute"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/redis-down"
+
+        # GPU Utilization Alert
+        - alert: HighGPUUtilization
+          expr: |
+            nvidia_gpu_duty_cycle{namespace="spreadsheet-moment"} > 0.95
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: High GPU utilization on ML inference
+            description: "GPU utilization is above 95% - consider scaling"
+            runbook_url: "https://runbooks.spreadsheet-moment.io/gpu-scaling"
+---
+# ServiceMonitor for Prometheus to scrape Spreadsheet Moment services
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: spreadsheet-moment-services
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spreadsheet-moment
+  namespaceSelector:
+    matchNames:
+      - spreadsheet-moment
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

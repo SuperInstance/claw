@@ -1,0 +1,147 @@
+# Prometheus configuration for Blackbox Exporter
+# Defines monitoring targets for uptime checks
+
+scrape_configs:
+  # Spreadsheet Moment API endpoints
+  - job_name: 'blackbox-api-health'
+    metrics_path: /probe
+    params:
+      module: [api_health]
+    static_configs:
+      - targets:
+          - https://api.superinstance.ai/health
+        labels:
+          service: spreadsheet-moment-api
+          environment: production
+          probe_type: health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Web UI availability
+  - job_name: 'blackbox-web-ui'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://www.superinstance.ai
+          - https://app.superinstance.ai
+        labels:
+          service: spreadsheet-moment-web
+          environment: production
+          probe_type: ui
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Database connectivity
+  - job_name: 'blackbox-postgres'
+    metrics_path: /probe
+    params:
+      module: [postgresql]
+    static_configs:
+      - targets:
+          - postgres:5432
+        labels:
+          service: postgres
+          environment: production
+          probe_type: database
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Redis connectivity
+  - job_name: 'blackbox-redis'
+    metrics_path: /probe
+    params:
+      module: [redis]
+    static_configs:
+      - targets:
+          - redis:6379
+        labels:
+          service: redis
+          environment: production
+          probe_type: cache
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # DNS checks
+  - job_name: 'blackbox-dns'
+    metrics_path: /probe
+    params:
+      module: [dns_udp]
+    static_configs:
+      - targets:
+          - superinstance.ai
+          - api.superinstance.ai
+          - www.superinstance.ai
+        labels:
+          service: dns
+          environment: production
+          probe_type: dns
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ICMP checks for key infrastructure
+  - job_name: 'blackbox-icmp'
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    static_configs:
+      - targets:
+          - api.superinstance.ai
+          - app.superinstance.ai
+        labels:
+          service: icmp
+          environment: production
+          probe_type: connectivity
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # API endpoint authentication check
+  - job_name: 'blackbox-api-auth'
+    metrics_path: /probe
+    params:
+      module: [http_auth]
+    static_configs:
+      - targets:
+          - https://api.superinstance.ai/v1/users/me
+        labels:
+          service: spreadsheet-moment-api
+          environment: production
+          probe_type: auth
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

@@ -1,0 +1,25 @@
+{
+  "AllowedOrigins": [
+    "https://spreadsheetmoment.com",
+    "https://www.spreadsheetmoment.com",
+    "https://api.spreadsheetmoment.com",
+    "https://*.spreadsheetmoment.com"
+  ],
+  "AllowedMethods": [
+    "GET",
+    "HEAD",
+    "PUT",
+    "POST",
+    "DELETE"
+  ],
+  "AllowedHeaders": [
+    "*"
+  ],
+  "ExposeHeaders": [
+    "ETag",
+    "Content-Length",
+    "Content-Type",
+    "Last-Modified"
+  ],
+  "MaxAgeSeconds": 86400
+}

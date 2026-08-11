@@ -1,0 +1,27 @@
+{
+  "title": "Ternary Weight Networks",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AR",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We translate biological dendritic spine geometry (50-200nm neck diameter) into silicon power isolation structures, achieving 3.2\u00d7 thermal isolation between active domains in 3D-ICs. Mushroom spine ROM (stable weights) and thin spine MRAM (adaptive weights) inform mixed-geometry thermal design. In 28nm 3D-IC implementation with 4 memory layers and 1 compute layer, spine neck structures enable sustained 2.1W operation at 85\u00b0C junction temperature with 8.2\u00d7 cross-domai",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P52",
+  "journal_ref": "",
+  "keywords": [
+    "3D-IC",
+    "Thermal Management",
+    "Neuromorphic Design",
+    "Bio-Inspired Architecture",
+    "Power Isolation"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

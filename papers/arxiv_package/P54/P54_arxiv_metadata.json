@@ -1,0 +1,27 @@
+{
+  "title": "Neuromorphic Thermal Management",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AR",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present bio-inspired thermal management for 3D-ICs based on dendritic spine geometry from neuroscience. By translating the 50-200nm neck diameter of biological spines into silicon power isolation structures, we achieve 3.2\u00d7 thermal isolation between active domains in 3D-ICs. Our approach combines mushroom spine ROM (stable weights) and thin spine MRAM (adaptive weights) geometries for mixed-architecture thermal design. In 28nm 3D-IC implementation with 4 memory lay",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P54",
+  "journal_ref": "",
+  "keywords": [
+    "3D-IC",
+    "Thermal Management",
+    "Neuromorphic Design",
+    "Bio-Inspired Architecture",
+    "Spine Geometry"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

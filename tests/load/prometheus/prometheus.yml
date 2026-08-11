@@ -1,0 +1,92 @@
+# Prometheus Configuration for Load Testing
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'spreadsheet-moment-load-test'
+    environment: 'testing'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files
+rule_files:
+  - 'rules/*.yml'
+
+# Scraping configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Application metrics
+  - job_name: 'spreadsheet-moment-app'
+    static_configs:
+      - targets: ['host.docker.internal:4000']
+        labels:
+          service: 'application'
+          component: 'api'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Node Exporter (if available)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+        labels:
+          service: 'infrastructure'
+          component: 'system'
+    scrape_interval: 10s
+
+  # cAdvisor (container metrics)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          service: 'infrastructure'
+          component: 'containers'
+    scrape_interval: 15s
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'cache'
+          component: 'redis'
+    scrape_interval: 10s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'database'
+          component: 'postgresql'
+    scrape_interval: 10s
+
+  # k6 metrics (if using k6 operator)
+  - job_name: 'k6'
+    static_configs:
+      - targets: ['localhost:6565']
+        labels:
+          service: 'load-testing'
+          tool: 'k6'
+
+  # Custom load test metrics
+  - job_name: 'load-test-metrics'
+    static_configs:
+      - targets: ['host.docker.internal:4000']
+        labels:
+          service: 'load-testing'
+          type: 'custom-metrics'
+    metrics_path: '/metrics/load-test'
+    scrape_interval: 5s

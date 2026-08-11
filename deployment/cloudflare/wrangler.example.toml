@@ -1,0 +1,158 @@
+# Cloudflare Workers Configuration for SpreadsheetMoment
+# Copy this file to wrangler.toml and fill in your values
+
+name = "spreadsheetmoment"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account ID (found in Cloudflare dashboard)
+# account_id = "your-account-id-here"
+
+# Workers configuration
+[build]
+command = "npm run build"
+cwd = "."
+watch_dirs = ["src"]
+
+# Environment-specific configurations
+[env.production]
+name = "spreadsheetmoment-prod"
+routes = [
+  { pattern = "api.spreadsheetmoment.com/*", zone_name = "spreadsheetmoment.com" },
+  { pattern = "spreadsheetmoment.com/*", zone_name = "spreadsheetmoment.com" }
+]
+
+[env.staging]
+name = "spreadsheetmoment-staging"
+routes = [
+  { pattern = "api-staging.spreadsheetmoment.com/*", zone_name = "spreadsheetmoment.com" }
+]
+
+[env.development]
+name = "spreadsheetmoment-dev"
+# Use `wrangler dev` for local development
+
+# D1 Database Bindings
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "spreadsheetmoment-prod"
+database_id = "your-production-database-id"
+# Get this from: wrangler d1 create spreadsheetmoment-prod
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "spreadsheetmoment-staging"
+database_id = "your-staging-database-id"
+
+# R2 Bucket Bindings
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "spreadsheetmoment-prod"
+# Create with: wrangler r2 bucket create spreadsheetmoment-prod
+
+[[env.staging.r2_buckets]]
+binding = "R2"
+bucket_name = "spreadsheetmoment-staging"
+
+# Durable Objects (enable in Cloudflare dashboard first)
+[[env.production.durable_objects.bindings]]
+name = "WORKSPACE_COORDINATOR"
+class_name = "WorkspaceCoordinator"
+script_name = "spreadsheetmoment-prod"
+
+[[env.production.durable_objects.bindings]]
+name = "CELL_UPDATE_MANAGER"
+class_name = "CellUpdateManager"
+script_name = "spreadsheetmoment-prod"
+
+[[env.production.durable_objects.bindings]]
+name = "COLLABORATION_SESSION"
+class_name = "CollaborationSession"
+script_name = "spreadsheetmoment-prod"
+
+[[env.production.durable_objects.bindings]]
+name = "HARDWARE_CONNECTION_POOL"
+class_name = "HardwareConnectionPool"
+script_name = "spreadsheetmoment-prod"
+
+# Vectorize Index Bindings
+[[env.production.vectorize]]
+binding = "VECTORS"
+index_name = "spreadsheetmoment-cells"
+# Create with: wrangler vectorize create spreadsheetmoment-cells --dimensions=1536 --metric=cosine
+
+# Queue Producers
+[[env.production.queue_producers]]
+binding = "ANALYTICS_QUEUE"
+queue = "analytics-events"
+# Create with: wrangler queues create analytics-events
+
+[[env.production.queue_producers]]
+binding = "BACKUP_QUEUE"
+queue = "backup-jobs"
+
+# KV Namespaces
+[[env.production.kv_namespaces]]
+binding = "KV"
+id = "your-production-kv-id"
+# Create with: wrangler kv:namespace create "KV" --preview=false
+
+[[env.staging.kv_namespaces]]
+binding = "KV"
+id = "your-staging-kv-id"
+
+# Service Bindings (Worker-to-Worker communication)
+[[env.production.services]]
+binding = "NLP_WORKER"
+service = "spreadsheetmoment-nlp"
+environment = "production"
+
+[[env.production.services]]
+binding = "HARDWARE_WORKER"
+service = "spreadsheetmoment-hardware"
+environment = "production"
+
+[[env.production.services]]
+binding = "STORAGE_WORKER"
+service = "spreadsheetmoment-storage"
+environment = "production"
+
+# Environment Variables
+[env.production.vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+LOG_LEVEL = "info"
+
+# External API Keys (set via: wrangler secret put OPENAI_API_KEY --env production)
+# OPENAI_API_KEY = ""
+# SUPERINSTANCE_API_KEY = ""
+# CLOUDFLARE_ACCOUNT_ID = ""
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+API_VERSION = "v1"
+LOG_LEVEL = "debug"
+
+# Limits and quotas
+[env.production.limits]
+cpu_ms = 30000  # 30 seconds
+
+# Analytics Engine (optional)
+[[env.production.analytics_engine_datasets]]
+binding = "ANALYTICS"
+
+# Scheduled Events (Cron Triggers)
+[[env.production.triggers]]
+crons = ["0 * * * *"]  # Every hour
+# Used for: backups, cleanup, analytics aggregation
+
+# Usage Model (for quotas)
+[env.production.usage_model]
+mode = "bundled"
+limit = 120  # CPU-time limit
+
+# observability
+[env.production.observability]
+enabled = true
+# head_sampling_rate = 1.0  # Sample 100% of requests for tracing

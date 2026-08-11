@@ -1,0 +1,27 @@
+{
+  "title": "Federated Learning with Deadband",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Federated learning enables collaborative model training without sharing raw data, but traditional approaches suffer from high communication costs, privacy vulnerabilities, and poor performance on non-IID data. This paper introduces pollen sharing with deadband\u2014a novel federated learning protocol that only communicates significant gradient updates while preserving privacy through secure aggregation. We demonstrate that deadband filtering reduces communication by 97% while",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P34",
+  "journal_ref": "",
+  "keywords": [
+    "Federated Learning",
+    "Privacy-Preserving Machine Learning",
+    "Deadband Control",
+    "Distributed Optimization",
+    "Secure Aggregation"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

@@ -1,0 +1,21 @@
+{
+  "title": "Low-Rank Federation Protocols for Scalable Distributed Systems",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AI",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Federation protocols in distributed systems typically share full state updates, creating bandwidth bottlenecks that limit scalability. We propose low-rank federation, inspired by LoRA (Low-Rank Adaptation) in machine learning. Instead of sharing full state vectors (dimension d), nodes share low-rank factors A (d \u00d7 r) and B (r \u00d7 d) where r << d (typically r=16). Reconstruction yields `W' = W + AB`, achieving 99.5% bandwidth reduction while maintaining system coherence. We prove that low-r",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P64",
+  "journal_ref": "",
+  "keywords": [],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

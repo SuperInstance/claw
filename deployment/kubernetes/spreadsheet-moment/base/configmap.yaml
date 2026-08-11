@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spreadsheet-moment-config
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: config
+data:
+  # Application Configuration
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+
+  # GraphQL API Server
+  GRAPHQL_PORT: "4000"
+  GRAPHQL_PLAYGROUND: "false"
+  GRAPHQL_INTROSPECTION: "false"
+
+  # Analytics Service
+  ANALYTICS_PORT: "4001"
+  ANALYTICS_BATCH_SIZE: "100"
+  ANALYTICS_FLUSH_INTERVAL: "5000"
+
+  # Real-time Subscription Service
+  SUBSCRIPTION_PORT: "4002"
+  WEBSOCKET_PORT: "4003"
+  SUBSCRIPTION_HEARTBEAT: "30000"
+
+  # Community Features Service
+  COMMUNITY_PORT: "4004"
+  MAX_CONNECTIONS_PER_USER: "10"
+
+  # PostgreSQL Configuration
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "spreadsheet_moment"
+  POSTGRES_MAX_CONNECTIONS: "100"
+  POSTGRES_POOL_SIZE: "20"
+
+  # Redis Configuration
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_MAX_MEMORY: "512mb"
+
+  # MinIO / Object Storage
+  MINIO_HOST: "minio"
+  MINIO_PORT: "9000"
+  MINIO_CONSOLE_PORT: "9001"
+  MINIO_BUCKET: "spreadsheet-moment"
+
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "60000"
+  RATE_LIMIT_MAX_REQUESTS: "1000"
+
+  # Feature Flags
+  ENABLE_GPU_ACCELERATION: "true"
+  ENABLE_ML_FEATURES: "true"
+  ENABLE_REAL_TIME_COLLAB: "true"
+
+  # GPU Configuration (for ML workloads)
+  NVIDIA_VISIBLE_DEVICES: "all"
+  CUDA_CACHE_DISABLE: "0"
+  TF_FORCE_GPU_ALLOW_GROWTH: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spreadsheet-moment-env
+  namespace: spreadsheet-moment
+  labels:
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: config
+data:
+  # Prometheus scrape configuration embedded
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'spreadsheet-moment-prod'
+        namespace: 'spreadsheet-moment'
+
+    scrape_configs:
+    - job_name: 'graphql-api'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - spreadsheet-moment
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: graphql-api
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ip]
+        target_label: __address__
+        replacement: $1:4000
+      metrics_path: '/metrics'
+
+    - job_name: 'analytics-service'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - spreadsheet-moment
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: analytics-service
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ip]
+        target_label: __address__
+        replacement: $1:4001
+
+    - job_name: 'subscription-service'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - spreadsheet-moment
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: subscription-service
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ip]
+        target_label: __address__
+        replacement: $1:4002
+
+    - job_name: 'community-service'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - spreadsheet-moment
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: community-service
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_ip]
+        target_label: __address__
+        replacement: $1:4004
+
+    - job_name: 'postgres-exporter'
+      static_configs:
+      - targets: ['postgres-exporter:9187']
+
+    - job_name: 'redis-exporter'
+      static_configs:
+      - targets: ['redis-exporter:9121']
+
+    - job_name: 'minio-exporter'
+      static_configs:
+      - targets: ['minio:9000']
+
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager:9093
+
+    rule_files:
+    - /etc/prometheus/rules/*.yml

@@ -1,0 +1,21 @@
+{
+  "title": "SE(3)-Equivariant Message Passing for Distributed Consensus",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AI",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Distributed consensus protocols typically rely on global coordinate systems or absolute value comparisons, creating fundamental brittleness under network reconfiguration and physical reorganization. We present SE(3)-equivariant message passing, a novel consensus protocol inspired by Invariant Point Attention from AlphaFold 3, enabling consensus through purely relative measurements without global coordinates. Each node maintains a local reference frame (rotation matrix and translation vector)",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P61",
+  "journal_ref": "",
+  "keywords": [],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

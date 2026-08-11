@@ -1,0 +1,81 @@
+# Spreadsheet Moment - Cloudflare Workers Configuration
+name = "spreadsheet-moment"
+compatibility_date = "2024-01-01"
+main = "src/index.ts"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+MAX_CELLS_PER_SPREADSHEET = 10000
+MAX_SPREADSHEETS_PER_USER = 100
+
+# KV Namespaces for spreadsheet storage
+[[kv_namespaces]]
+binding = "CELL_DATA"
+id = "cell_data"
+preview_id = "cell_data_preview"
+
+[[kv_namespaces]]
+binding = "SPREADSHEET_METADATA"
+id = "spreadsheet_metadata"
+preview_id = "spreadsheet_metadata_preview"
+
+# D1 Database for structured data
+[[d1_databases]]
+binding = "DB"
+database_name = "spreadsheet_moment_db"
+database_id = "your-database-id-here"
+
+# Durable Objects for real-time collaboration
+[[durable_objects.bindings]]
+name = "COLLABORATION"
+class_name = "CollaborationDurableObject"
+
+# R2 Bucket for file storage
+[[r2_buckets]]
+binding = "FILE_STORAGE"
+bucket_name = "spreadsheet-moment-files"
+
+# Vectorize for vector search
+[[vectorize]]
+binding = "VECTOR_INDEX"
+index_name = "spreadsheet_vectors"
+
+# Queue for async processing
+[[queues.producers]]
+binding = "CELL_PROCESSOR"
+queue = "cell-processing-queue"
+
+# Routes
+[[routes]]
+pattern = "https://spreadsheet-moment.superinstance.ai/*"
+zone_name = "superinstance.ai"
+
+# Limits
+[limits]
+cpu_ms = 50
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Rules for common static assets
+[rules]]
+[[rules]]
+type = "ESModule"
+globs = ["**/*.ts"]
+
+# Analytics
+[analytics]
+enabled = true
+
+# Staging environment
+[env.staging]
+name = "spreadsheet-moment-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# Development environment
+[env.dev]
+name = "spreadsheet-moment-dev"
+vars = { ENVIRONMENT = "development" }

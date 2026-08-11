@@ -1,0 +1,27 @@
+{
+  "title": "Stochastic Computing in 3D-ICs",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.ET",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present stochastic computing in 3D-ICs, where Through-Silicon Via (TSV) delay variation is leveraged as an entropy source for probabilistic inference. Rather than treating manufacturing variation as a defect to be minimized, we characterize TSV delay as a lognormal random variable (\u03bc=0.7ps, \u03c3=0.15ps) and harness this physical randomness for: (1) Bayesian inference uncertainty propagation, (2) Monte Carlo dropout in hardware, (3) Energy-based model sampling without de",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P56",
+  "journal_ref": "",
+  "keywords": [
+    "Stochastic Computing",
+    "3D-IC",
+    "TSV Variation",
+    "Bayesian Inference",
+    "Uncertainty Quantification"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

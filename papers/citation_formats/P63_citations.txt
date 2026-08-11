@@ -1,0 +1,53 @@
+# Citation Formats for P63
+
+## Title: Phylogenetic Confidence Cascades for Origin-Centric Systems
+## Authors: SuperInstance Research Team
+## Year: 2026
+
+================================================================================
+
+### APA 7th Edition
+SuperInstance Research Team. (2026). Phylogenetic Confidence Cascades for Origin-Centric Systems. arXiv preprint arXiv:[XXXX.XXXXX].
+
+### MLA 9th Edition
+"Phylogenetic Confidence Cascades for Origin-Centric Systems." SuperInstance Research Team, 2026, arXiv preprint arXiv:[XXXX.XXXXX].
+
+### Chicago 17th Edition
+SuperInstance Research Team. "Phylogenetic Confidence Cascades for Origin-Centric Systems." arXiv preprint arXiv:[XXXX.XXXXX] (2026).
+
+### Harvard Style
+SuperInstance Research Team (2026) 'Phylogenetic Confidence Cascades for Origin-Centric Systems', arXiv preprint arXiv:[XXXX.XXXXX].
+
+### BibTeX
+@misc{superinstance2026phylogenetic,
+  title = {Phylogenetic Confidence Cascades for Origin-Centric Systems},
+  author = {SuperInstance Research Team},
+  year = {2026},
+  eprint = {{arXiv:XXXX.XXXXX}},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  doi = {10.5281/zenodo.XXXXXXX},
+  url = {https://github.com/SuperInstance/SuperInstance-papers}
+}
+
+### EndNote
+%0 Generic
+%T Phylogenetic Confidence Cascades for Origin-Centric Systems
+%A SuperInstance Research Team
+%D 2026
+%K arXiv preprint
+%R arXiv:XXXX.XXXXX
+%U https://github.com/SuperInstance/SuperInstance-papers
+%I SuperInstance Project
+
+
+### RIS
+TY - GEN
+TI - Phylogenetic Confidence Cascades for Origin-Centric Systems
+AU - SuperInstance Research Team
+PY - 2026
+KW - arXiv preprint
+M3 - arXiv preprint arXiv:XXXX.XXXXX
+UR - https://github.com/SuperInstance/SuperInstance-papers
+PB - SuperInstance Project
+ER -

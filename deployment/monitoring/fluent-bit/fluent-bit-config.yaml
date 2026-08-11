@@ -1,0 +1,90 @@
+# Fluent Bit Configuration for Spreadsheet Moment
+# Collects and forwards logs to Loki
+
+SERVICE:
+    Flush: 5
+    Daemon: false
+    Log_Level: info
+    Parsers_File: parsers.conf
+
+# Input: Collect container logs
+INPUT:
+    Name: tail
+    Path: /var/log/containers/*.log
+    Parser: docker
+    Tag: kube.*
+    Refresh_Interval: 5
+    Mem_Buf_Limit: 5MB
+    Skip_Long_Lines: On
+
+# Input: Collect systemd journal logs
+INPUT:
+    Name: systemd
+    Tag: host.*
+    Systemd_Filter: _SYSTEMD_UNIT=kubelet.service
+    Read_From_Tail: true
+
+# Input: Collect host metrics
+INPUT:
+    Name: cpu
+    Tag: cpu
+    Interval_Sec: 1
+
+INPUT:
+    Name: mem
+    Tag: mem
+    Interval_Sec: 1
+
+# Filter: Add Kubernetes metadata
+FILTER:
+    Name: kubernetes
+    Match: kube.*
+    Kube_URL: https://kubernetes.default.svc:443
+    Kube_CA_File: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    Kube_Token_File: /var/run/secrets/kubernetes.io/serviceaccount/token
+    Kube_Tag_Prefix: kube.var.log.containers.
+    Merge_Log: On
+    Keep_Log: Off
+    K8S-Logging.Parser: On
+    K8S-Logging.Exclude: On
+    Labels: On
+    Annotations: On
+
+# Filter: Add environment metadata
+FILTER:
+    Name: nest
+    Match: kube.*
+    Operation: lift
+    Nested_under: kubernetes
+    Add_prefix: kubernetes_
+
+# Filter: Remove unnecessary fields
+FILTER:
+    Name: record_modifier
+    Match: kube.*
+    Remove: stream
+    Remove: time
+    Remove: logtag
+
+# Output: Send to Loki
+OUTPUT:
+    Name: loki
+    Match: *
+    Host: loki
+    Port: 3100
+    Labels: job=fluent-bit,cluster=superinstance-production,$kubernetes_pod_name,$kubernetes_namespace,$kubernetes_pod_label_app
+    LabelKeys: $kubernetes_pod_name,$kubernetes_namespace,$kubernetes_pod_label_app,$kubernetes_pod_label_component
+    LineFormat: json
+    RemoveKeys: kubernetes_pod_id,kubernetes_host,kubernetes_container_hash,kubernetes_pod_name,kubernetes_namespace
+    AutoKubernetesLabels: true
+    TenantID: spreadsheet-moment
+    BatchWait: 1
+    BatchSize: 1048576
+    MinRetryWait: 10
+    MaxRetryWait: 60
+
+# Output: Send to stdout for debugging
+OUTPUT:
+    Name: stdout
+    Match: *
+    Format: json_lines

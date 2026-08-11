@@ -1,0 +1,423 @@
+[
+  {
+    "paper_id": "P31",
+    "filename": "P31_Health_Prediction_Systems.md",
+    "title": "P31: Health Prediction Systems",
+    "subtitle": "Predictive Health Monitoring for Distributed AI Systems",
+    "abstract": "**Predictive health monitoring** enables distributed AI systems to anticipate failures before they occur, transforming reactive maintenance into proactive intervention. This paper introduces a **multi-dimensional health scoring framework** that combines resource utilization metrics, error patterns, performance degradation signals, and anomaly detection into a unified health indicator. We demonstrate that **health metrics predict system failures with 87% correlation** (r=0.87, p<0.001), enabling ",
+    "keywords": [
+      "Health Monitoring",
+      "Predictive Maintenance",
+      "Distributed Systems",
+      "Failure Prediction",
+      "Anomaly Detection",
+      "Self-Healing Systems"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P31\\P31_Health_Prediction_Systems.md",
+    "word_count": 5810
+  },
+  {
+    "paper_id": "P32",
+    "filename": "P32_Dreaming_Memory_Consolidation.md",
+    "title": "P32: Dreaming and Memory Consolidation",
+    "subtitle": "Offline Memory Optimization in Distributed AI Systems",
+    "abstract": "**Offline consolidation**\u2014replaying and restructuring memories during quiescent periods\u2014enables AI systems to learn from experience without disrupting ongoing operations. This paper introduces a **dreaming framework** for distributed AI systems that performs **experience replay**, **memory reorganization**, and **model weight optimization** during off-peak hours, inspired by sleep-based memory consolidation in biological brains. We demonstrate that **dreaming improves performance by 23%** on tas",
+    "keywords": [
+      "Continual Learning",
+      "Memory Consolidation",
+      "Experience Replay",
+      "Sleep",
+      "Catastrophic Forgetting",
+      "Distributed Systems"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P32\\P32_Dreaming_Memory_Consolidation.md",
+    "word_count": 5158
+  },
+  {
+    "paper_id": "P33",
+    "filename": "P33_LoRA_Swarms.md",
+    "title": "P33: LoRA Swarms",
+    "subtitle": "Emergent Capability Composition Through Low-Rank Adaptation",
+    "abstract": "**Low-Rank Adaptation (LoRA)** enables efficient model fine-tuning by learning small adapter matrices while keeping base model weights frozen. This paper introduces **LoRA swarms**\u2014collections of specialized LoRA adapters that compose to create emergent capabilities beyond individual adapters. We demonstrate that **composing 5 specialized adapters achieves 23% better performance** than the best single adapter on tasks requiring combined capabilities, while using only **7.3% of the parameters** r",
+    "keywords": [
+      "LoRA",
+      "Modular Deep Learning",
+      "Emergence",
+      "Parameter-Efficient Fine-Tuning",
+      "Swarm Intelligence",
+      "Composition"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P33\\P33_LoRA_Swarms.md",
+    "word_count": 4747
+  },
+  {
+    "paper_id": "P34",
+    "filename": "P34_Federated_Learning_Deadband.md",
+    "title": "P34: Federated Learning with Deadband",
+    "subtitle": "Privacy-Preserving Distributed Learning Through Pollen Sharing",
+    "abstract": "**Federated learning** enables collaborative model training without sharing raw data, but traditional approaches suffer from **high communication costs**, **privacy vulnerabilities**, and **poor performance on non-IID data**. This paper introduces **pollen sharing with deadband**\u2014a novel federated learning protocol that only communicates significant gradient updates while preserving privacy through secure aggregation. We demonstrate that **deadband filtering reduces communication by 97%** while ",
+    "keywords": [
+      "Federated Learning",
+      "Privacy-Preserving Machine Learning",
+      "Deadband Control",
+      "Distributed Optimization",
+      "Secure Aggregation",
+      "Non-IID Learning"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P34\\P34_Federated_Learning_Deadband.md",
+    "word_count": 3500
+  },
+  {
+    "paper_id": "P35",
+    "filename": "P35_Guardian_Angel_Systems.md",
+    "title": "P35: Guardian Angel Systems",
+    "subtitle": "Shadow Monitoring for Safety-Critical AI Systems",
+    "abstract": "**Safety-critical AI systems** (autonomous vehicles, medical devices, industrial control) require **proactive failure prevention** rather than reactive response. This paper introduces **Guardian Angel Systems**\u2014shadow monitoring frameworks that predict failures before they occur and execute interventions to prevent them. We demonstrate that **guardian angels detect failures 13.7 timesteps in advance** (p<0.001), enabling **proactive intervention that prevents 84% of predicted failures** while ad",
+    "keywords": [
+      "Fault Tolerance",
+      "Predictive Maintenance",
+      "Shadow Monitoring",
+      "Self-Healing Systems",
+      "AI Safety",
+      "Reliability Engineering"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P35\\P35_Guardian_Angel_Systems.md",
+    "word_count": 4031
+  },
+  {
+    "paper_id": "P36",
+    "filename": "P36_Emotional_Intelligence.md",
+    "title": "P36: Emotional Intelligence",
+    "subtitle": "Affective Computing for Distributed AI Systems",
+    "abstract": "**Emotional intelligence** enables AI systems to understand, respond to, and influence human emotions in distributed computing environments. This paper introduces **affective state modeling frameworks** that combine sentiment analysis, physiological signals, behavioral patterns, and contextual cues into unified emotional representations. We demonstrate that **emotion-aware AI systems achieve 43% better user satisfaction** scores (p<0.001) and **37% higher task completion rates** in collaborative",
+    "keywords": [
+      "Affective Computing",
+      "Emotional Intelligence",
+      "Sentiment Analysis",
+      "Human-AI Interaction",
+      "Cross-Cultural Computing",
+      "Empathetic AI"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P36\\P36_Emotional_Intelligence.md",
+    "word_count": 4663
+  },
+  {
+    "paper_id": "P37",
+    "filename": "P37_Creative_Thinking.md",
+    "title": "P37: Creative Thinking",
+    "subtitle": "Divergent-Convergent synthesis for AI Problem Solving",
+    "abstract": "**Creative thinking** enables AI systems to generate novel solutions beyond pattern matching and interpolation. This paper introduces **divergent-convergent synthesis frameworks** that combine expansive idea generation with rigorous evaluation to produce creative yet viable solutions. We demonstrate that **AI systems with divergent-convergent synthesis generate 3.7\u00d7 more novel solutions** (measured by semantic distance from training data) while maintaining **91% of the solution quality** compare",
+    "keywords": [
+      "Computational Creativity",
+      "Divergent Thinking",
+      "Convergent Thinking",
+      "Creative Problem Solving",
+      "Design Synthesis",
+      "Innovation"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P37\\P37_Creative_Thinking.md",
+    "word_count": 4762
+  },
+  {
+    "paper_id": "P38",
+    "filename": "P38_Meta_Learning.md",
+    "title": "P38: Meta-Learning",
+    "subtitle": "Learning to Learn for Rapid Adaptation in Distributed AI Systems",
+    "abstract": "**Meta-learning** enables AI systems to learn how to learn, acquiring knowledge and strategies that generalize across tasks rather than solving individual tasks in isolation. This paper introduces **hierarchical meta-learning frameworks** that combine task-level learning with meta-level optimization, enabling systems to **adapt to new tasks with 10\u00d7 fewer examples** and **3.7\u00d7 faster convergence** compared to standard transfer learning approaches. We demonstrate that **meta-learned initializatio",
+    "keywords": [
+      "Meta-Learning",
+      "Few-Shot Learning",
+      "Learning to Learn",
+      "Rapid Adaptation",
+      "MAML",
+      "Hierarchical Optimization"
+    ],
+    "contributions_count": 7,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P38\\P38_Meta_Learning.md",
+    "word_count": 4778
+  },
+  {
+    "paper_id": "P39",
+    "filename": "P39_Transfer_Learning.md",
+    "title": "P39: Transfer Learning",
+    "subtitle": "Cross-Domain Knowledge Transfer for Distributed AI Systems",
+    "abstract": "**Transfer learning** enables AI systems to leverage knowledge from source domains to improve performance in target domains, reducing data requirements and training time dramatically. This paper introduces **hierarchical transfer learning frameworks** that combine feature-level, instance-level, and parameter-level transfer with cross-domain alignment techniques. We demonstrate that **multi-level transfer achieves 73% of target domain performance** using only **10% of the target domain training d",
+    "keywords": [
+      "Transfer Learning",
+      "Domain Adaptation",
+      "Knowledge Transfer",
+      "Cross-Domain Learning",
+      "Distributed Systems"
+    ],
+    "contributions_count": 8,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P39\\P39_Transfer_Learning.md",
+    "word_count": 5019
+  },
+  {
+    "paper_id": "P40",
+    "filename": "P40_Continual_Learning.md",
+    "title": "P40: Continual Learning",
+    "subtitle": "Lifelong Learning without Catastrophic Forgetting in Non-Stationary Environments",
+    "abstract": "**Continual learning** enables AI systems to learn from a stream of tasks over time, accumulating knowledge while avoiding catastrophic forgetting of previously learned information. This paper introduces **hierarchical continual learning frameworks** that combine experience replay, architectural regularization, and dynamic network expansion to achieve **lifelong learning with only 4.3% forgetting** after 100 sequential tasks, compared to 73% forgetting for standard fine-tuning. We demonstrate th",
+    "keywords": [
+      "Continual Learning",
+      "Lifelong Learning",
+      "Catastrophic Forgetting",
+      "Non-Stationary Environments",
+      "Experience Replay",
+      "Progressive Networks"
+    ],
+    "contributions_count": 8,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\31-40\\P40\\P40_Continual_Learning.md",
+    "word_count": 5539
+  },
+  {
+    "paper_id": "P51",
+    "filename": "P51_Mask_Locked_Type_Systems.md",
+    "title": "P51: Mask-Locked Type Systems",
+    "subtitle": "Hardware-Embedded Type Systems: Mask-Locked Weight Encoding for Neural Network Type Safety",
+    "abstract": "We introduce **mask-locked type systems**, where neural network type constraints are physically enforced through metal-layer weight encoding during chip manufacturing. By committing types to silicon at manufacture time, we achieve: (1) **zero runtime type checking overhead**, (2) **guaranteed type safety through physical impossibility of violations**, (3) **50\u00d7 energy efficiency vs. software type checking**. We demonstrate **ternary type systems {-1, 0, +1}** embedded in 28nm CMOS with **0.12 \u03bcm",
+    "keywords": [
+      "Type Systems",
+      "Hardware Security",
+      "VLSI Design",
+      "Neural Networks",
+      "Ternary Logic",
+      "Edge Computing"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P51\\P51_Mask_Locked_Type_Systems.md",
+    "word_count": 3938
+  },
+  {
+    "paper_id": "P52",
+    "filename": "P52_Ternary_Weight_Networks.md",
+    "title": "P52: Ternary Weight Networks",
+    "subtitle": "Bio-Inspired Thermal Geometry: Spine Neck Isolation Structures for 3D-IC Power Domains",
+    "abstract": "We translate **biological dendritic spine geometry** (50-200nm neck diameter) into silicon power isolation structures, achieving **3.2\u00d7 thermal isolation** between active domains in 3D-ICs. **Mushroom spine ROM** (stable weights) and **thin spine MRAM** (adaptive weights) inform mixed-geometry thermal design. In **28nm 3D-IC implementation** with 4 memory layers and 1 compute layer, spine neck structures enable **sustained 2.1W operation** at **85\u00b0C junction temperature** with **8.2\u00d7 cross-domai",
+    "keywords": [
+      "3D-IC",
+      "Thermal Management",
+      "Neuromorphic Design",
+      "Bio-Inspired Architecture",
+      "Power Isolation",
+      "MRAM"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P52\\P52_Ternary_Weight_Networks.md",
+    "word_count": 3663
+  },
+  {
+    "paper_id": "P53",
+    "filename": "P53_Educational_AI_Pedagogy.md",
+    "title": "P53: Educational AI Pedagogy",
+    "subtitle": "Cross-Cultural Synthesis: Multi-Method Teaching Pattern Extraction from 127,000+ ML Training Samples",
+    "abstract": "We present a framework for extracting **culturally-adaptive teaching patterns** from **127,000+ cross-cultural educational dialogues** generated by the Lucineer educational AI platform. Using **15 base synthesis methods** (Socratic, Dialectical, Analogical, Constructivist, Inquiry-based, Problem-based, Experiential, Collaborative, Direct, Scaffolding, Metacognitive, Flipped, Gamified, Narrative, Visual) and **12 combination tiles**, we identify: (1) **culture-method effectiveness correlations**,",
+    "keywords": [
+      "Educational AI",
+      "Cross-Cultural Learning",
+      "Teaching Methods",
+      "Cultural Adaptation",
+      "Personalized Learning",
+      "Human-Computer Interaction"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P53\\P53_Educational_AI_Pedagogy.md",
+    "word_count": 4002
+  },
+  {
+    "paper_id": "P54",
+    "filename": "P54_Neuromorphic_Thermal_Management.md",
+    "title": "P54: Neuromorphic Thermal Management",
+    "subtitle": "Bio-Inspired Thermal Geometry: Spine Neck Isolation Structures for 3D-IC Power Domains",
+    "abstract": "We present **bio-inspired thermal management** for 3D-ICs based on **dendritic spine geometry** from neuroscience. By translating the **50-200nm neck diameter** of biological spines into silicon power isolation structures, we achieve **3.2\u00d7 thermal isolation** between active domains in 3D-ICs. Our approach combines **mushroom spine ROM** (stable weights) and **thin spine MRAM** (adaptive weights) geometries for mixed-architecture thermal design. In **28nm 3D-IC implementation** with 4 memory lay",
+    "keywords": [
+      "3D-IC",
+      "Thermal Management",
+      "Neuromorphic Design",
+      "Bio-Inspired Architecture",
+      "Spine Geometry",
+      "Power Isolation"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P54\\P54_Neuromorphic_Thermal_Management.md",
+    "word_count": 2843
+  },
+  {
+    "paper_id": "P55",
+    "filename": "P55_Cartridge_Economics.md",
+    "title": "P55: Cartridge Economics",
+    "subtitle": "The Cartridge Model: Physical AI Distribution as Disruption to SaaS Economics",
+    "abstract": "We analyze the **cartridge model for AI distribution**\u2014physical intelligence delivery via swappable hardware\u2014and compare to traditional **SaaS (Software as a Service) economics**. Through **customer lifetime value (LTV) modeling**, **break-even analysis**, and **market positioning** strategies, we demonstrate: (1) **$35 unit economics** enable India/China scale markets, (2) **2-3 year upgrade cycles** capture **$215/customer** vs. **$480 SaaS LTV**, (3) **volume growth** compensates for lower ma",
+    "keywords": [
+      "Economics of AI",
+      "Physical Distribution",
+      "SaaS Economics",
+      "Market Design",
+      "Pricing Strategy",
+      "Cost Modeling"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P55\\P55_Cartridge_Economics.md",
+    "word_count": 3144
+  },
+  {
+    "paper_id": "P56",
+    "filename": "P56_Stochastic_Computing.md",
+    "title": "P56: Stochastic Computing in 3D-ICs",
+    "subtitle": "Stochastic Processes in 3D-IC Inference: TSV Delay as Random Variable for Uncertainty Quantification",
+    "abstract": "We present **stochastic computing in 3D-ICs**, where **Through-Silicon Via (TSV) delay variation** is leveraged as an **entropy source for probabilistic inference**. Rather than treating manufacturing variation as a defect to be minimized, we characterize **TSV delay as a lognormal random variable** (\u03bc=0.7ps, \u03c3=0.15ps) and harness this physical randomness for: (1) **Bayesian inference uncertainty propagation**, (2) **Monte Carlo dropout in hardware**, (3) **Energy-based model sampling without de",
+    "keywords": [
+      "Stochastic Computing",
+      "3D-IC",
+      "TSV Variation",
+      "Bayesian Inference",
+      "Uncertainty Quantification",
+      "Monte Carlo Methods"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P56\\P56_Stochastic_Computing.md",
+    "word_count": 5115
+  },
+  {
+    "paper_id": "P57",
+    "filename": "P57_3D_Stacked_Memory.md",
+    "title": "P57: 3D Stacked Memory for Neural Inference",
+    "subtitle": "Vertical Integration: Ternary Memory-in-Logic Architecture for Edge AI Acceleration",
+    "abstract": "We present **3D Stacked Memory for Neural Inference**, a **vertical integration architecture** that co-locates **ternary memory arrays** with **compute logic** in a unified 3D-IC stack. By stacking **4 DRAM layers** directly atop **1 compute layer** with **high-density TSVs** (10\u03bcm pitch, 5\u03bcm diameter), we achieve **1.2 TB/s effective bandwidth**\u2014**8.3\u00d7 higher** than traditional 2D chips with **12\u00d7 lower energy** per access. Our architecture introduces **Ternary Memory-in-Logic (TMiL)**, where m",
+    "keywords": [
+      "3D-IC",
+      "Stacked DRAM",
+      "Memory-in-Logic",
+      "Ternary Memory",
+      "Neural Acceleration",
+      "Edge AI",
+      "Through-Silicon Vias"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P57\\P57_3D_Stacked_Memory.md",
+    "word_count": 5447
+  },
+  {
+    "paper_id": "P58",
+    "filename": "P58_Game_Theoretic_Teaching.md",
+    "title": "P58: Game-Theoretic Teaching",
+    "subtitle": "Strategic Pedagogy: Game-Theoretic Analysis of Adaptive Educational Systems",
+    "abstract": "We present **Game-Theoretic Teaching**, a framework for analyzing and optimizing **adaptive educational systems** through the lens of **game theory**. We model teaching as a **sequential game** between teacher and student, where: (1) teacher selects teaching method from **15 options** (Socratic, storytelling, visual, kinesthetic, etc.), (2) student selects learning strategy (attention depth, question frequency, engagement level), (3) payoff = **learning outcome** measured by retention and transf",
+    "keywords": [
+      "Game Theory",
+      "Adaptive Teaching",
+      "Nash Equilibrium",
+      "Cross-Cultural Education",
+      "Multi-Armed Bandits",
+      "Educational AI",
+      "Pedagogy Optimization"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P58\\P58_Game_Theoretic_Teaching.md",
+    "word_count": 5683
+  },
+  {
+    "paper_id": "P59",
+    "filename": "P59_Swarm_Coordination.md",
+    "title": "P59: Swarm Coordination",
+    "subtitle": "Emergent Intelligence: Stigmergic Coordination in Multiple Mask-Locked Inference Cartridges",
+    "abstract": "We present **Swarm Coordination for Neural Inference**, a framework for **emergent collective intelligence** in multiple **mask-locked inference cartridges** operating in parallel. By enabling **plug-and-play hardware cartridges** to coordinate through **stigmergic communication** (indirect signaling via shared state), **ELO-based task allocation**, and **competitive coevolution**, we demonstrate: (1) **30% collective performance improvement** vs. isolated units, (2) **automatic task partitionin",
+    "keywords": [
+      "Swarm Intelligence",
+      "Stigmergy",
+      "Neural Inference",
+      "Cartridge Architecture",
+      "ELO Rating",
+      "Competitive Coevolution",
+      "Distributed Systems",
+      "Emergent Coordination"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P59\\P59_Swarm_Coordination.md",
+    "word_count": 5505
+  },
+  {
+    "paper_id": "P60",
+    "filename": "P60_Adaptive_Learning.md",
+    "title": "P60: Hardware-Based Adaptive Learning",
+    "subtitle": "Neuromorphic Plasticity: On-Chip Learning Acceleration for Mask-Locked Inference Systems",
+    "abstract": "We present **Hardware-Based Adaptive Learning**, a neuromorphic approach to **on-chip learning acceleration** for mask-locked inference systems. While traditional mask-locked cartridges have immutable weights (baked into metal at fabrication), we introduce **plastic regions**\u2014reconfigurable memory arrays that enable **local learning without full network retraining**. By implementing **spike-timing-dependent plasticity (STDP)**, **Hebbian learning**, and **reward-modulated plasticity** in **mixed",
+    "keywords": [
+      "Neuromorphic Hardware",
+      "On-Chip Learning",
+      "Plasticity",
+      "STDP",
+      "Hebbian Learning",
+      "Mask-Locked Inference",
+      "MRAM",
+      "ReRAM",
+      "Lifelong Learning"
+    ],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\51-60\\P60\\P60_Adaptive_Learning.md",
+    "word_count": 5131
+  },
+  {
+    "paper_id": "P61",
+    "filename": "P61_SE3_Equivariant_Message_Passing.md",
+    "title": "P61: SE(3)-Equivariant Message Passing for Distributed Consensus",
+    "subtitle": "Abstract",
+    "abstract": "Distributed consensus protocols typically rely on global coordinate systems or absolute value comparisons, creating fundamental brittleness under network reconfiguration and physical reorganization. We present **SE(3)-equivariant message passing**, a novel consensus protocol inspired by Invariant Point Attention from AlphaFold 3, enabling consensus through purely relative measurements without global coordinates. Each node maintains a local reference frame (rotation matrix and translation vector)",
+    "keywords": [],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\61-65\\P61\\P61_SE3_Equivariant_Message_Passing.md",
+    "word_count": 4522
+  },
+  {
+    "paper_id": "P62",
+    "filename": "P62_Evolutionary_Deadband_Adaptation.md",
+    "title": "P62: Evolutionary Deadband Adaptation via Ancient Cell Mechanisms",
+    "subtitle": "Abstract",
+    "abstract": "Deadband thresholds for knowledge distillation typically require manual tuning or heuristic adaptation, creating bottlenecks in deploying adaptive AI systems. We introduce **evolutionary deadband adaptation**, inspired by evolutionary optimization of cellular signaling pathways. Our method maintains a population of deadband configurations; fitness is defined as minimizing teacher model calls while maximizing task success. Using genetic algorithms with mutation (boundary adjustment) and crossover",
+    "keywords": [],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\61-65\\P62\\P62_Evolutionary_Deadband_Adaptation.md",
+    "word_count": 4581
+  },
+  {
+    "paper_id": "P63",
+    "filename": "P63_Phylogenetic_Confidence_Cascades.md",
+    "title": "P63: Phylogenetic Confidence Cascades for Origin-Centric Systems",
+    "subtitle": "Abstract",
+    "abstract": "Origin-Centric Data Systems (OCDS) require confidence propagation across potentially unreliable network paths. Current methods use exponential decay but fail to handle **missing data** and **network partitions**, leading to inaccurate state estimates and cascading errors. We propose **phylogenetic confidence cascades**, adapting ancestral sequence reconstruction algorithms from computational biology to distributed systems. Our method models the origin graph as a phylogenetic tree; confidence at ",
+    "keywords": [],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\61-65\\P63\\P63_Phylogenetic_Confidence_Cascades.md",
+    "word_count": 4190
+  },
+  {
+    "paper_id": "P64",
+    "filename": "P64_Low_Rank_Federation_Protocols.md",
+    "title": "P64: Low-Rank Federation Protocols for Scalable Distributed Systems",
+    "subtitle": "Abstract",
+    "abstract": "Federation protocols in distributed systems typically share full state updates, creating bandwidth bottlenecks that limit scalability. We propose **low-rank federation**, inspired by LoRA (Low-Rank Adaptation) in machine learning. Instead of sharing full state vectors (dimension d), nodes share low-rank factors A (d \u00d7 r) and B (r \u00d7 d) where r << d (typically r=16). Reconstruction yields `W' = W + AB`, achieving **99.5% bandwidth reduction** while maintaining system coherence. We prove that low-r",
+    "keywords": [],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\61-65\\P64\\P64_Low_Rank_Federation_Protocols.md",
+    "word_count": 4544
+  },
+  {
+    "paper_id": "P65",
+    "filename": "P65_Molecular_Game_Theory.md",
+    "title": "P65: Molecular Game-Theoretic Framework for Multi-Agent Consensus",
+    "subtitle": "Abstract",
+    "abstract": "Multi-agent consensus systems lack formal guarantees of stability and optimality. We introduce a **molecular game-theoretic framework**, modeling agent interactions as evolutionary games. Each agent (Pathos, Logos, Ethos) is a \"species\" with strategies; consensus decisions are evolutionary equilibria. We prove that **tripartite consensus is an Evolutionary Stable Strategy (ESS)**: no single-perspective mutant can invade the three-perspective equilibrium. The framework derives **optimal domain we",
+    "keywords": [],
+    "contributions_count": 0,
+    "full_path": "C:\\Users\\casey\\polln\\papers\\61-65\\P65\\P65_Molecular_Game_Theory.md",
+    "word_count": 4283
+  }
+]

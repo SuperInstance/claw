@@ -1,0 +1,82 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'superinstance'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Rule files
+rule_files:
+  - 'alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+  # Claw API Server
+  - job_name: 'claw-api'
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+        labels:
+          service: 'claw'
+          component: 'api'
+          application: 'claw'
+    scrape_interval: 10s
+    metrics_path: '/api/monitoring/metrics'
+
+  # Constraint Theory Web
+  - job_name: 'constraint-theory'
+    static_configs:
+      - targets: ['host.docker.internal:8787']
+        labels:
+          service: 'constraint-theory'
+          component: 'web'
+          application: 'constraint-theory'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+
+  # Spreadsheet Moment
+  - job_name: 'spreadsheet-moment'
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+        labels:
+          service: 'spreadsheet-moment'
+          component: 'api'
+          application: 'spreadsheet-moment'
+    scrape_interval: 10s
+    metrics_path: '/api/monitoring/metrics'
+
+  # Node Exporter - System metrics
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+          component: 'node'
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'containers'
+          component: 'cadvisor'

@@ -1,0 +1,27 @@
+{
+  "title": "LoRA Swarms",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Low-Rank Adaptation (LoRA) enables efficient model fine-tuning by learning small adapter matrices while keeping base model weights frozen. This paper introduces LoRA swarms\u2014collections of specialized LoRA adapters that compose to create emergent capabilities beyond individual adapters. We demonstrate that composing 5 specialized adapters achieves 23% better performance than the best single adapter on tasks requiring combined capabilities, while using only 7.3% of the parameters r",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P33",
+  "journal_ref": "",
+  "keywords": [
+    "LoRA",
+    "Modular Deep Learning",
+    "Emergence",
+    "Parameter-Efficient Fine-Tuning",
+    "Swarm Intelligence"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

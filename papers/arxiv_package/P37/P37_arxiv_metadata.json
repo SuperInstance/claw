@@ -1,0 +1,27 @@
+{
+  "title": "Creative Thinking",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AI",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Creative thinking enables AI systems to generate novel solutions beyond pattern matching and interpolation. This paper introduces divergent-convergent synthesis frameworks that combine expansive idea generation with rigorous evaluation to produce creative yet viable solutions. We demonstrate that AI systems with divergent-convergent synthesis generate 3.7\u00d7 more novel solutions (measured by semantic distance from training data) while maintaining 91% of the solution quality compare",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P37",
+  "journal_ref": "",
+  "keywords": [
+    "Computational Creativity",
+    "Divergent Thinking",
+    "Convergent Thinking",
+    "Creative Problem Solving",
+    "Design Synthesis"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

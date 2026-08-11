@@ -1,0 +1,76 @@
+# Image assets (large files)
+docs/assets/images/*.png
+docs/assets/images/*.jpg
+docs/assets/images/*.jpeg
+docs/assets/images/*.gif
+docs/assets/images/*.pdf
+docs/assets/images/*.psd
+docs/assets/images/*.ai
+
+# Keep directory structure but ignore large files
+!docs/assets/images/.gitkeep
+
+# Iteration saves (can be very large)
+docs/assets/iterations/*
+
+# Keep directory structure
+!docs/assets/iterations/.gitkeep
+
+# Translation files (if using translation platform)
+docs/translations/*.xliff
+docs/translations/*.xlf
+
+# Keep directory structure
+!docs/translations/.gitkeep
+
+# Simulation data (can be very large)
+simulations/*.csv
+simulations/*.json
+simulations/*.h5
+simulations/*.pkl
+
+# Keep directory structure
+!simulations/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+temp/
+
+# Security - API keys and secrets (NEVER commit these!)
+*.key
+*.pem
+nvapi-*
+.env
+.env.local
+.env.*.local
+secrets/
+credentials/
+api_keys.txt
+secrets.txt
+private_keys/

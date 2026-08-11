@@ -1,0 +1,700 @@
+{
+  "contributionWorkflow": {
+    "name": "Template Contribution Workflow",
+    "version": "1.0.0",
+    "description": "Complete workflow for template contributions from submission to approval",
+
+    "stages": [
+      {
+        "id": "submission",
+        "name": "Submission",
+        "description": "User submits a template to the community",
+        "requiredFields": [
+          "title",
+          "description",
+          "category",
+          "tags",
+          "file",
+          "screenshot",
+          "license"
+        ],
+        "validations": {
+          "title": {
+            "minLength": 10,
+            "maxLength": 255,
+            "pattern": "^[a-zA-Z0-9\\s\\-]+$"
+          },
+          "description": {
+            "minLength": 50,
+            "maxLength": 500
+          },
+          "tags": {
+            "minCount": 2,
+            "maxCount": 5
+          },
+          "file": {
+            "maxSize": "10MB",
+            "allowedFormats": [".xlsx", ".xls", ".csv"]
+          },
+          "screenshot": {
+            "maxSize": "5MB",
+            "allowedFormats": [".png", ".jpg", ".jpeg", ".gif"]
+          }
+        },
+        "autoActions": [
+          "createDraftRecord",
+          "generateSlug",
+          "scanForMalware",
+          "extractMetadata",
+          "sendConfirmationEmail"
+        ]
+      },
+      {
+        "id": "review",
+        "name": "Community Review",
+        "description": "Template enters review queue for community feedback",
+        "duration": "7 days",
+        "requirements": {
+          "minReviews": 3,
+          "minRating": 3.0,
+          "requiredBadges": ["Reviewer"]
+        },
+        "reviewCriteria": [
+          {
+            "id": "quality",
+            "name": "Quality",
+            "description": "Template is well-structured and functional",
+            "weight": 0.3
+          },
+          {
+            "id": "documentation",
+            "name": "Documentation",
+            "description": "Clear instructions and documentation provided",
+            "weight": 0.2
+          },
+          {
+            "id": "originality",
+            "name": "Originality",
+            "description": "Template is original and not a duplicate",
+            "weight": 0.2
+          },
+          {
+            "id": "usability",
+            "name": "Usability",
+            "description": "Easy to use and understand",
+            "weight": 0.15
+          },
+          {
+            "id": "value",
+            "name": "Value",
+            "description": "Provides significant value to users",
+            "weight": 0.15
+          }
+        ],
+        "autoActions": [
+          "addToReviewQueue",
+          "notifyReviewers",
+          "trackReviewProgress",
+          "calculateAverageRating"
+        ]
+      },
+      {
+        "id": "moderation",
+        "name": "Moderation Check",
+        "description": "Moderators verify template meets standards",
+        "checks": [
+          {
+            "id": "content",
+            "name": "Content Policy",
+            "description": "Template complies with content policies",
+            "severity": "critical"
+          },
+          {
+            "id": "malware",
+            "name": "Security Check",
+            "description": "No malicious code or macros",
+            "severity": "critical"
+          },
+          {
+            "id": "license",
+            "name": "License Compliance",
+            "description": "Proper licensing and attribution",
+            "severity": "high"
+          },
+          {
+            "id": "spam",
+            "name": "Spam Check",
+            "description": "Not spam or low-quality content",
+            "severity": "medium"
+          }
+        ],
+        "autoActions": [
+          "runSecurityScan",
+          "checkLicenseCompliance",
+          "detectDuplicateContent",
+          "flagIfIssuesFound"
+        ]
+      },
+      {
+        "id": "approval",
+        "name": "Approval",
+        "description": "Template is approved and published",
+        "conditions": {
+          "minOverallRating": 3.5,
+          "minReviewCount": 3,
+          "moderationApproved": true,
+          "noCriticalFlags": true
+        },
+        "autoActions": [
+          "approveTemplate",
+          "publishToGallery",
+          "notifyContributor",
+          "awardBadges",
+          "updateReputation",
+          "createForumPost"
+        ]
+      },
+      {
+        "id": "rejection",
+        "name": "Rejection",
+        "description": "Template is rejected with feedback",
+        "reasons": [
+          "lowQuality",
+          "duplicateContent",
+          "policyViolation",
+          "malwareDetected",
+          "insufficientDocumentation"
+        ],
+        "autoActions": [
+          "rejectTemplate",
+          "sendRejectionEmail",
+          "provideFeedback",
+          "allowResubmission"
+        ]
+      }
+    ]
+  },
+
+  "gamification": {
+    "enabled": true,
+    "description": "Gamification system to incentivize quality contributions",
+
+    "reputation": {
+      "name": "Reputation Points",
+      "description": "Earn reputation through community contributions",
+      "startingPoints": 0,
+      "levels": [
+        {
+          "name": "Newcomer",
+          "minPoints": 0,
+          "maxPoints": 49,
+          "privileges": [
+            "viewTemplates",
+            "downloadTemplates",
+            "likeContent"
+          ]
+        },
+        {
+          "name": "Member",
+          "minPoints": 50,
+          "maxPoints": 199,
+          "privileges": [
+            "uploadTemplates",
+            "writeReviews",
+            "commentOnTemplates"
+          ]
+        },
+        {
+          "name": "Active Member",
+          "minPoints": 200,
+          "maxPoints": 499,
+          "privileges": [
+            "voteOnReviews",
+            "flagContent",
+            "createTopics"
+          ]
+        },
+        {
+          "name": "Trusted Member",
+          "minPoints": 500,
+          "maxPoints": 999,
+          "privileges": [
+            "reviewTemplates",
+            "editCommunityWiki",
+            "accessModerationTools"
+          ]
+        },
+        {
+          "name": "Expert",
+          "minPoints": 1000,
+          "maxPoints": 2499,
+          "privileges": [
+            "approveTemplates",
+            "moderateContent",
+            "accessAnalytics"
+          ]
+        },
+        {
+          "name": "Master",
+          "minPoints": 2500,
+          "maxPoints": 4999,
+          "privileges": [
+            "manageCategories",
+            "createBadges",
+            "advancedModeration"
+          ]
+        },
+        {
+          "name": "Grandmaster",
+          "minPoints": 5000,
+          "maxPoints": null,
+          "privileges": [
+            "allPrivileges",
+            "adminTools",
+            "communityLeadership"
+          ]
+        }
+      ],
+      "earningRules": [
+        {
+          "action": "templatePublished",
+          "points": 50,
+          "maxPerDay": 5,
+          "description": "Template published to gallery"
+        },
+        {
+          "action": "reviewWritten",
+          "points": 10,
+          "maxPerDay": 20,
+          "description": "Review written for a template"
+        },
+        {
+          "action": "helpfulVote",
+          "points": 5,
+          "maxPerDay": 50,
+          "description": "Review marked as helpful"
+        },
+        {
+          "action": "templateDownloaded",
+          "points": 2,
+          "maxPerDay": null,
+          "description": "Your template was downloaded"
+        },
+        {
+          "action": "templateForked",
+          "points": 5,
+          "maxPerDay": null,
+          "description": "Your template was forked"
+        },
+        {
+          "action": "badgeEarned",
+          "points": 25,
+          "maxPerDay": null,
+          "description": "Badge earned"
+        },
+        {
+          "action": "forumPost",
+          "points": 5,
+          "maxPerDay": 10,
+          "description": "Helpful forum post"
+        },
+        {
+          "action": "answerAccepted",
+          "points": 25,
+          "maxPerDay": null,
+          "description": "Forum answer accepted"
+        }
+      ],
+      "losingRules": [
+        {
+          "action": "contentFlagged",
+          "points": -10,
+          "description": "Content flagged for review"
+        },
+        {
+          "action": "templateRejected",
+          "points": -5,
+          "description": "Template submission rejected"
+        },
+        {
+          "action": "downvoteReceived",
+          "points": -2,
+          "description": "Content downvoted"
+        }
+      ]
+    },
+
+    "badges": [
+      {
+        "id": "first_template",
+        "name": "First Template",
+        "description": "Published your first template",
+        "rarity": "common",
+        "icon": "📄",
+        "requirementType": "templates_published",
+        "requirementValue": 1,
+        "reputationReward": 10,
+        "oneTime": true
+      },
+      {
+        "id": "template_author",
+        "name": "Template Author",
+        "description": "Published 5 templates",
+        "rarity": "rare",
+        "icon": "📝",
+        "requirementType": "templates_published",
+        "requirementValue": 5,
+        "reputationReward": 50,
+        "oneTime": true
+      },
+      {
+        "id": "template_master",
+        "name": "Template Master",
+        "description": "Published 25 templates",
+        "rarity": "epic",
+        "icon": "🏆",
+        "requirementType": "templates_published",
+        "requirementValue": 25,
+        "reputationReward": 150,
+        "oneTime": true
+      },
+      {
+        "id": "template_legend",
+        "name": "Template Legend",
+        "description": "Published 100 templates",
+        "rarity": "legendary",
+        "icon": "👑",
+        "requirementType": "templates_published",
+        "requirementValue": 100,
+        "reputationReward": 500,
+        "oneTime": true
+      },
+      {
+        "id": "helpful_reviewer",
+        "name": "Helpful Reviewer",
+        "description": "Received 10 helpful votes on reviews",
+        "rarity": "rare",
+        "icon": "👍",
+        "requirementType": "helpful_votes_received",
+        "requirementValue": 10,
+        "reputationReward": 30,
+        "oneTime": true
+      },
+      {
+        "id": "expert_reviewer",
+        "name": "Expert Reviewer",
+        "description": "Wrote 50 reviews",
+        "rarity": "epic",
+        "icon": "⭐",
+        "requirementType": "reviews_written",
+        "requirementValue": 50,
+        "reputationReward": 100,
+        "oneTime": true
+      },
+      {
+        "id": "popular_creator",
+        "name": "Popular Creator",
+        "description": "Templates downloaded 1000 times",
+        "rarity": "epic",
+        "icon": "🔥",
+        "requirementType": "total_downloads",
+        "requirementValue": 1000,
+        "reputationReward": 200,
+        "oneTime": true
+      },
+      {
+        "id": "viral_template",
+        "name": "Viral Template",
+        "description": "Single template downloaded 500 times",
+        "rarity": "legendary",
+        "icon": "💥",
+        "requirementType": "single_template_downloads",
+        "requirementValue": 500,
+        "reputationReward": 300,
+        "oneTime": true
+      },
+      {
+        "id": "community_star",
+        "name": "Community Star",
+        "description": "Received 100 helpful votes",
+        "rarity": "legendary",
+        "icon": "🌟",
+        "requirementType": "helpful_votes_received",
+        "requirementValue": 100,
+        "reputationReward": 400,
+        "oneTime": true
+      },
+      {
+        "id": "monthly_champion",
+        "name": "Monthly Champion",
+        "description": "Top contributor of the month",
+        "rarity": "legendary",
+        "icon": "🏅",
+        "requirementType": "monthly_rank",
+        "requirementValue": 1,
+        "reputationReward": 500,
+        "oneTime": false,
+        "resets": "monthly"
+      }
+    ],
+
+    "leaderboards": [
+      {
+        "id": "top_contributors",
+        "name": "Top Contributors",
+        "description": "Users with the most reputation",
+        "timeframe": "all_time",
+        "limit": 100,
+        "refreshInterval": "hourly",
+        "columns": [
+          {"field": "rank", "label": "Rank", "width": "10%"},
+          {"field": "username", "label": "User", "width": "30%"},
+          {"field": "reputation", "label": "Reputation", "width": "20%"},
+          {"field": "templates", "label": "Templates", "width": "20%"},
+          {"field": "reviews", "label": "Reviews", "width": "20%"}
+        ]
+      },
+      {
+        "id": "top_templates",
+        "name": "Top Templates",
+        "description": "Most downloaded templates",
+        "timeframe": "all_time",
+        "limit": 50,
+        "refreshInterval": "daily",
+        "columns": [
+          {"field": "rank", "label": "Rank", "width": "10%"},
+          {"field": "title", "label": "Template", "width": "40%"},
+          {"field": "author", "label": "Author", "width": "20%"},
+          {"field": "downloads", "label": "Downloads", "width": "15%"},
+          {"field": "rating", "label": "Rating", "width": "15%"}
+        ]
+      },
+      {
+        "id": "rising_stars",
+        "name": "Rising Stars",
+        "description": "Fastest growing contributors this month",
+        "timeframe": "monthly",
+        "limit": 25,
+        "refreshInterval": "daily",
+        "columns": [
+          {"field": "rank", "label": "Rank", "width": "10%"},
+          {"field": "username", "label": "User", "width": "40%"},
+          {"field": "reputation_gain", "label": "Reputation Gain", "width": "25%"},
+          {"field": "templates_added", "label": "New Templates", "width": "25%"}
+        ]
+      },
+      {
+        "id": "top_reviewers",
+        "name": "Top Reviewers",
+        "description": "Most active reviewers",
+        "timeframe": "all_time",
+        "limit": 50,
+        "refreshInterval": "daily",
+        "columns": [
+          {"field": "rank", "label": "Rank", "width": "10%"},
+          {"field": "username", "label": "User", "width": "40%"},
+          {"field": "reviews", "label": "Reviews", "width": "25%"},
+          {"field": "helpful_votes", "label": "Helpful Votes", "width": "25%"}
+        ]
+      },
+      {
+        "id": "trending_templates",
+        "name": "Trending Templates",
+        "description": "Most popular templates this week",
+        "timeframe": "weekly",
+        "limit": 20,
+        "refreshInterval": "hourly",
+        "algorithm": "weighted_score",
+        "weights": {
+          "downloads": 0.4,
+          "reviews": 0.3,
+          "rating": 0.2,
+          "recent_activity": 0.1
+        },
+        "columns": [
+          {"field": "rank", "label": "Rank", "width": "10%"},
+          {"field": "title", "label": "Template", "width": "35%"},
+          {"field": "author", "label": "Author", "width": "20%"},
+          {"field": "score", "label": "Trending Score", "width": "15%"},
+          {"field": "weekly_downloads", "label": "This Week", "width": "20%"}
+        ]
+      }
+    ]
+  },
+
+  "notifications": {
+    "enabled": true,
+    "channels": ["email", "in_app", "push"],
+
+    "events": [
+      {
+        "id": "template_submitted",
+        "name": "Template Submitted",
+        "template": "template_submitted",
+        "recipients": ["contributor"],
+        "channels": ["email", "in_app"]
+      },
+      {
+        "id": "template_approved",
+        "name": "Template Approved",
+        "template": "template_approved",
+        "recipients": ["contributor"],
+        "channels": ["email", "in_app", "push"]
+      },
+      {
+        "id": "template_rejected",
+        "name": "Template Rejected",
+        "template": "template_rejected",
+        "recipients": ["contributor"],
+        "channels": ["email", "in_app"]
+      },
+      {
+        "id": "review_request",
+        "name": "Review Request",
+        "template": "review_request",
+        "recipients": ["eligible_reviewers"],
+        "channels": ["email", "in_app"]
+      },
+      {
+        "id": "badge_earned",
+        "name": "Badge Earned",
+        "template": "badge_earned",
+        "recipients": ["user"],
+        "channels": ["email", "in_app", "push"]
+      },
+      {
+        "id": "level_up",
+        "name": "Level Up",
+        "template": "level_up",
+        "recipients": ["user"],
+        "channels": ["email", "in_app", "push"]
+      },
+      {
+        "id": "helpful_vote",
+        "name": "Helpful Vote",
+        "template": "helpful_vote",
+        "recipients": ["reviewer"],
+        "channels": ["in_app"],
+        "batch": true,
+        "batchInterval": "hourly"
+      },
+      {
+        "id": "template_downloaded",
+        "name": "Template Downloaded",
+        "template": "template_downloaded",
+        "recipients": ["author"],
+        "channels": ["in_app"],
+        "batch": true,
+        "batchInterval": "daily"
+      }
+    ]
+  },
+
+  "moderation": {
+    "enabled": true,
+    "autoModeration": true,
+
+    "flags": [
+      {
+        "id": "spam",
+        "name": "Spam",
+        "description": "Content appears to be spam",
+        "severity": "medium",
+        "autoAction": "queue_for_review"
+      },
+      {
+        "id": "inappropriate",
+        "name": "Inappropriate Content",
+        "description": "Content violates community guidelines",
+        "severity": "high",
+        "autoAction": "remove_and_queue"
+      },
+      {
+        "id": "malware",
+        "name": "Potential Malware",
+        "description": "File may contain malicious code",
+        "severity": "critical",
+        "autoAction": "remove_and_ban"
+      },
+      {
+        "id": "copyright",
+        "name": "Copyright Violation",
+        "description": "Content may violate copyright",
+        "severity": "high",
+        "autoAction": "queue_for_review"
+      },
+      {
+        "id": "low_quality",
+        "name": "Low Quality",
+        "description": "Content does not meet quality standards",
+        "severity": "low",
+        "autoAction": "queue_for_review"
+      }
+    ],
+
+    "workflow": [
+      {
+        "stage": "auto_moderation",
+        "checks": [
+          "spam_detection",
+          "profanity_filter",
+          "malware_scan",
+          "duplicate_detection",
+          "quality_score"
+        ]
+      },
+      {
+        "stage": "community_flagging",
+        "enabled": true,
+        "minReputationToFlag": 50,
+        "requiredFlags": 3
+      },
+      {
+        "stage": "moderator_review",
+        "assignment": "round_robin",
+        "escalation": {
+          "age_hours": 24,
+          "severity": "high"
+        }
+      },
+      {
+        "stage": "resolution",
+        "actions": [
+          "approve",
+          "reject",
+          "request_changes",
+          "remove_content",
+          "warn_user",
+          "suspend_user"
+        ]
+      }
+    ],
+
+    "penalties": [
+      {
+        "level": "warning",
+        "threshold": 1,
+        "action": "formal_warning",
+        "reputationImpact": -10
+      },
+      {
+        "level": "temporary_suspension",
+        "threshold": 3,
+        "action": "suspend_7_days",
+        "reputationImpact": -50
+      },
+      {
+        "level": "extended_suspension",
+        "threshold": 5,
+        "action": "suspend_30_days",
+        "reputationImpact": -100
+      },
+      {
+        "level": "permanent_ban",
+        "threshold": 7,
+        "action": "permanent_ban",
+        "reputationImpact": "all"
+      }
+    ]
+  }
+}

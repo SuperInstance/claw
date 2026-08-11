@@ -1,0 +1,31 @@
+{
+  "Rules": [
+    {
+      "ID": "DeleteTempUploads",
+      "Filter": {
+        "Prefix": "temp/"
+      },
+      "Status": "Enabled",
+      "Expiration": {
+        "Days": 1
+      }
+    },
+    {
+      "ID": "ArchiveOldExports",
+      "Filter": {
+        "Prefix": "exports/"
+      },
+      "Status": "Enabled",
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 90
+      }
+    },
+    {
+      "ID": "AbortIncompleteMultipartUploads",
+      "Status": "Enabled",
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+# SuperInstance Research Platform - Production Docker Compose
+# Production-ready multi-container orchestration with GPU support
+
+version: '3.9'
+
+services:
+  # API Server
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.api
+    image: superinstance/api:${IMAGE_TAG:-latest}
+    container_name: superinstance-api
+    restart: always
+    ports:
+      - "8000:8000"
+      - "9229:9229"
+    environment:
+      - NODE_ENV=production
+      - POLLN_API_PORT=8000
+      - POLLN_API_HOST=0.0.0.0
+      - DATABASE_URL=postgresql://superinstance:${POSTGRES_PASSWORD}@postgres:5432/superinstance
+      - REDIS_URL=redis://redis:6379
+      - DEEPINFRA_API_KEY=${DEEPINFRA_API_KEY}
+      - POLLN_LOG_LEVEL=info
+      - POLLN_RATE_LIMIT_RPM=1000
+      - POLLN_AUTH_ENABLED=true
+    volumes:
+      - api-data:/app/.polln
+      - api-agents:/app/.agents
+    networks:
+      - superinstance-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # GPU Worker
+  worker-gpu:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.worker
+    image: superinstance/worker:${IMAGE_TAG:-latest}
+    container_name: superinstance-worker-gpu
+    restart: always
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - WORKER_TYPE=gpu
+      - DATABASE_URL=postgresql://superinstance:${POSTGRES_PASSWORD}@postgres:5432/superinstance
+      - REDIS_URL=redis://redis:6379
+      - WORKER_CONCURRENCY=4
+    volumes:
+      - worker-data:/app/data
+      - worker-cache:/app/cache
+    networks:
+      - superinstance-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Web Dashboard
+  web:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.web
+    image: superinstance/web:${IMAGE_TAG:-latest}
+    container_name: superinstance-web
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - superinstance-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: superinstance-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=superinstance
+      - POSTGRES_USER=superinstance
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - superinstance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superinstance -d superinstance"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: superinstance-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - superinstance-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: superinstance-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+    networks:
+      - superinstance-network
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: superinstance-grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - superinstance-network
+    depends_on:
+      - prometheus
+
+networks:
+  superinstance-network:
+    driver: bridge
+    name: superinstance-network
+
+volumes:
+  api-data:
+    name: superinstance-api-data
+  api-agents:
+    name: superinstance-api-agents
+  worker-data:
+    name: superinstance-worker-data
+  worker-cache:
+    name: superinstance-worker-cache
+  postgres-data:
+    name: superinstance-postgres-data
+  redis-data:
+    name: superinstance-redis-data
+  prometheus-data:
+    name: superinstance-prometheus-data
+  grafana-data:
+    name: superinstance-grafana-data

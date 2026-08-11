@@ -1,0 +1,378 @@
+{
+  "dashboard": {
+    "title": "Spreadsheet Moment - Database Performance",
+    "tags": ["database", "postgresql", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Database Query Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "database:query_rate:per_second",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "qps", "label": "Queries/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Query Duration - P50",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "database:query_duration:p50",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Query Duration"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Query Duration - P95",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 20, "y": 0},
+        "targets": [
+          {
+            "expr": "database:query_duration:p95",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Query Duration"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [5], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Database query P95 duration is above 5s",
+          "name": "Slow Query Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Database Connection Pool Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "database:connection_usage:percent",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Connection Usage"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Cache Hit Ratio",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "database:cache_hit_ratio:percent",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Cache Hit Ratio"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [95], "type": "lt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "10m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Database cache hit ratio is below 95%",
+          "name": "Low Cache Hit Ratio",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Active Database Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count{datname=\"spreadsheet_moment\"}",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "pg_settings_max_connections",
+            "legendFormat": "Max Connections",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Replication Lag",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "pg_replication_lag_seconds",
+            "legendFormat": "Replication Lag",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Lag"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [30], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Database replication lag is above 30s",
+          "name": "Replication Lag Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Table Sizes",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "pg_stat_user_tables_size",
+            "legendFormat": "Table Size",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "schemaname": "Schema",
+                "tablename": "Table",
+                "Value": "Size (Bytes)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Index Usage Statistics",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "pg_stat_user_indexes_idx_scan",
+            "legendFormat": "Index Scans",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "pg_stat_user_indexes_idx_tup_read",
+            "legendFormat": "Tuples Read",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "pg_stat_user_indexes_idx_tup_fetch",
+            "legendFormat": "Tuples Fetched",
+            "refId": "C",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "schemaname": "Schema",
+                "relname": "Table",
+                "indexrelname": "Index"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Database Locks",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 34},
+        "targets": [
+          {
+            "expr": "pg_locks_count",
+            "legendFormat": "{{mode}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Locks"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Deadlocks",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 34},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_deadlocks[5m])",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Deadlocks/sec"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.1], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Database deadlocks detected",
+          "name": "Deadlock Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 12,
+        "title": "Transaction Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 42},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_xact_commit[5m])",
+            "legendFormat": "Commits - {{datname}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(pg_stat_database_xact_rollback[5m])",
+            "legendFormat": "Rollbacks - {{datname}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "tps", "label": "Transactions/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Database Write Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 42},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_blks_hit[5m])",
+            "legendFormat": "Blocks Hit",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(pg_stat_database_blks_read[5m])",
+            "legendFormat": "Blocks Read",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "Bps", "label": "Blocks/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Slow Queries",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 50},
+        "targets": [
+          {
+            "expr": "pg_stat_statements_mean_exec_time > 1000",
+            "legendFormat": "Mean Execution Time",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "pg_stat_statements_calls",
+            "legendFormat": "Calls",
+            "refId": "B",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          }
+        ]
+      }
+    ]
+  }
+}

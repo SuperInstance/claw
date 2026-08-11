@@ -1,0 +1,27 @@
+{
+  "title": "Hardware-Based Adaptive Learning",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present Hardware-Based Adaptive Learning, a neuromorphic approach to on-chip learning acceleration for mask-locked inference systems. While traditional mask-locked cartridges have immutable weights (baked into metal at fabrication), we introduce plastic regions\u2014reconfigurable memory arrays that enable local learning without full network retraining. By implementing spike-timing-dependent plasticity (STDP), Hebbian learning, and reward-modulated plasticity in mixed",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P60",
+  "journal_ref": "",
+  "keywords": [
+    "Neuromorphic Hardware",
+    "On-Chip Learning",
+    "Plasticity",
+    "STDP",
+    "Hebbian Learning"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

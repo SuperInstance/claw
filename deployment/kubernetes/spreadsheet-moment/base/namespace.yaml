@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spreadsheet-moment
+  labels:
+    name: spreadsheet-moment
+    environment: production
+    project: spreadsheet-ai
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: platform
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    scheduler.alpha.kubernetes.io/defaultTolerations: "[]"
+    scheduler.alpha.kubernetes.io/tolerationsWhitelist: "[]"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: spreadsheet-moment-limits
+  namespace: spreadsheet-moment
+spec:
+  limits:
+  - type: Container
+    default:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    max:
+      cpu: "4"
+      memory: "8Gi"
+    min:
+      cpu: "50m"
+      memory: "64Mi"
+  - type: PersistentVolumeClaim
+    max:
+      storage: "100Gi"
+    min:
+      storage: "1Gi"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: spreadsheet-moment-quota
+  namespace: spreadsheet-moment
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: "40Gi"
+    limits.cpu: "40"
+    limits.memory: "80Gi"
+    persistentvolumeclaims: "20"
+    pods: "50"
+    services: "20"
+    secrets: "30"
+    configmaps: "30"

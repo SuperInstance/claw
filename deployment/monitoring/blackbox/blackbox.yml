@@ -1,0 +1,147 @@
+# Blackbox Exporter Configuration for Spreadsheet Moment
+# Probes for uptime monitoring
+
+modules:
+  # HTTP probe for API endpoints
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      # Use HTTP GET
+      method: GET
+
+      # Valid status codes
+      valid_status_codes: [200, 201, 202, 204]
+
+      # Follow redirects
+      follow_redirects: true
+
+      # Check HTTP headers
+      fail_if_header_not_matches:
+        - header: Content-Type
+          regex: 'application/json'
+
+      # TLS configuration
+      tls_config:
+        insecure_skip_verify: false
+
+      # IP protocol
+      preferred_ip_protocol: ip4
+
+  # HTTP probe with authentication
+  http_auth:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      authorization:
+        type: Bearer
+        credentials: ${API_BEARER_TOKEN}
+      tls_config:
+        insecure_skip_verify: false
+
+  # ICMP probe for network connectivity
+  icmp:
+    prober: icmp
+    timeout: 10s
+    icmp:
+      # Don't fragment
+      dont_fragment: true
+
+      # IP protocol
+      preferred_ip_protocol: ip4
+
+      # Source address
+      source_ip_address: 127.0.0.1
+
+  # TCP probe for connectivity checks
+  tcp_connect:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      # IP protocol
+      preferred_ip_protocol: ip4
+
+      # Query response
+      query_response:
+        - expect: "^SSH-"
+
+  # DNS probe
+  dns_udp:
+    prober: dns
+    timeout: 5s
+    dns:
+      # Query type
+      query_type: "A"
+
+      # DNS server
+      dns_protocol: "udp"
+
+      # Valid RCODEs
+      valid_rcodes:
+        - NOERROR
+        - NXDOMAIN
+
+      # Validate answer
+      validate_answer_rrs:
+        fail_if_matches_regexp:
+          - .*.*127.0.0.1
+        fail_if_not_matches_regexp:
+          - .*.*superinstance\.ai
+
+  # PostgreSQL probe
+  postgresql:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      query_response:
+        - expect: "^E"
+        - send: "Q\tdisconnect 'timeout'\x00"
+        - expect: "^[09]"
+
+  # Redis probe
+  redis:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      query_response:
+        - send: "PING\r\n"
+        - expect: "+PONG\r\n"
+        - send: "QUIT\r\n"
+        - expect: "+OK\r\n"
+
+  # API health check probe
+  api_health:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      fail_if_body_not_matches_regexp:
+        - '"healthy": true'
+        - '"status": "ok"'
+      tls_config:
+        insecure_skip_verify: false
+
+  # WebSocket probe
+  websocket:
+    prober: http
+    timeout: 15s
+    http:
+      method: GET
+      valid_status_codes: [101]
+
+  # GraphQL probe
+  graphql:
+    prober: http
+    timeout: 10s
+    http:
+      method: POST
+      headers:
+        Content-Type: application/json
+      body: '{"query": "{ __typename }"}'
+      valid_status_codes: [200]
+      fail_if_body_not_matches_regexp:
+        - '{"data":{.*}}'

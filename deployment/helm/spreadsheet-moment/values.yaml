@@ -1,0 +1,345 @@
+# Spreadsheet Moment Helm Chart - Default Values
+# Customize for your deployment environment
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  environment: production
+  logLevel: info
+
+# GraphQL API Service
+graphqlApi:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: spreadsheet-moment
+    name: graphql-api
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 4000
+    annotations: {}
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilization: 70
+    targetMemoryUtilization: 80
+
+  env:
+    NODE_ENV: production
+    LOG_LEVEL: info
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Analytics Service
+analyticsService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: spreadsheet-moment
+    name: analytics
+    tag: latest
+
+  service:
+    type: ClusterIP
+    port: 4001
+
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    limits:
+      cpu: 4000m
+      memory: 4Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+
+  env:
+    NODE_ENV: production
+    BATCH_SIZE: "100"
+    FLUSH_INTERVAL: "5000"
+
+# Subscription Service (WebSocket)
+subscriptionService:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: spreadsheet-moment
+    name: subscription
+    tag: latest
+
+  service:
+    type: ClusterIP
+    ports:
+      graphql: 4002
+      websocket: 4003
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 15
+
+# Community Service
+communityService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: spreadsheet-moment
+    name: community
+    tag: latest
+
+  service:
+    type: ClusterIP
+    port: 4004
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# ML Inference Service (GPU)
+mlInference:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    repository: spreadsheet-moment
+    name: ml-inference
+    tag: latest-gpu
+
+  service:
+    type: ClusterIP
+    port: 5000
+
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+      nvidia.com/gpu: 1
+    limits:
+      cpu: 8000m
+      memory: 16Gi
+      nvidia.com/gpu: 1
+
+  nodeSelector:
+    accelerator: nvidia-gpu
+
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+
+# PostgreSQL Database
+postgresql:
+  enabled: true
+
+  # If using external PostgreSQL, set enabled: false and provide external config
+  external:
+    enabled: false
+    host: ""
+    port: 5432
+    database: spreadsheet_moment
+    username: ""
+    password: ""
+    existingSecret: ""
+
+  # Internal PostgreSQL (using Bitnami chart)
+  auth:
+    username: spreadsheet
+    password: ""  # Will be generated if empty
+    database: spreadsheet_moment
+
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+      storageClass: standard
+
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+# Redis Cache
+redis:
+  enabled: true
+
+  # If using external Redis, set enabled: false
+  external:
+    enabled: false
+    host: ""
+    port: 6379
+    password: ""
+
+  # Internal Redis (using Bitnami chart)
+  auth:
+    enabled: false
+    password: ""
+
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: standard
+
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+# MinIO Object Storage
+minio:
+  enabled: true
+  replicaCount: 2
+
+  mode: distributed
+
+  auth:
+    rootUser: spreadsheet-admin
+    rootPassword: ""  # Will be generated if empty
+
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: standard
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+  hosts:
+    - host: api.spreadsheet-moment.io
+      paths:
+        - path: /
+          service:
+            name: graphql-api
+            port: 4000
+    - host: ws.spreadsheet-moment.io
+      paths:
+        - path: /
+          service:
+            name: subscription-service
+            port: 4003
+
+  tls:
+    - secretName: spreadsheet-moment-tls
+      hosts:
+        - api.spreadsheet-moment.io
+        - ws.spreadsheet-moment.io
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+
+  prometheus:
+    enabled: true
+    retention: 15d
+    storage: 50Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+  grafana:
+    enabled: true
+    adminPassword: ""  # Will be generated
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  alertmanager:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Network Policies
+networkPolicies:
+  enabled: true
+
+# Pod Security Standards
+podSecurity:
+  enabled: true
+  standard: restricted
+
+# Service Account
+serviceAccount:
+  create: true
+  name: spreadsheet-moment-api
+  annotations: {}
+
+# Secrets Configuration
+secrets:
+  # Set to external to use External Secrets Operator
+  external: false
+
+  # JWT configuration
+  jwt:
+    secret: ""  # Will be generated if empty
+    refreshSecret: ""
+    expiration: 3600
+    refreshExpiration: 604800
+
+  # Encryption keys
+  encryption:
+    dataKey: ""
+    sessionSecret: ""

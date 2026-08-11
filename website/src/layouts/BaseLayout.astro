@@ -1,0 +1,138 @@
+---
+import '../styles/global.css';
+import { Navigation } from '../components/layout/Navigation';
+import { Footer } from '../components/layout/Footer';
+import ServiceWorkerRegistration from '../components/performance/ServiceWorkerRegistration.astro';
+import EducationalOptimizations from '../components/performance/EducationalOptimizations.astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SuperInstance.AI - Learn advanced AI, geometric tensor mathematics, and intelligent systems. Free educational platform with age-appropriate learning for K-12, university, and professional students." />
+
+    <title>
+      <slot name="title">SuperInstance.AI - Learn Advanced AI & Mathematics</slot>
+    </title>
+
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="SuperInstance.AI - Learn Advanced AI & Mathematics" />
+    <meta property="og:description" content="Master geometric tensor mathematics, AI systems, and intelligent automation. Free educational platform for all ages." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://superinstance.ai" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SuperInstance.AI - Learn Advanced AI & Mathematics" />
+    <meta name="twitter:description" content="Master geometric tensor mathematics, AI systems, and intelligent automation. Free educational platform for all ages." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- Preconnect to CDNs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts (with font-display: swap for performance) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/_astro/index.css" as="style" />
+    <link rel="preload" href="/_astro/client.js" as="script" />
+
+    <!-- Web App Manifest for PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#3b82f6" />
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- DNS Prefetch for CDNs -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+    <!-- Performance hints -->
+    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width" />
+    <meta http-equiv="Accept-CH-Lifetime" content="86400" />
+
+    <!-- Plausible Analytics (Privacy-friendly) -->
+    <script defer data-domain="superinstance.ai" src="https://plausible.io/js/script.js"></script>
+
+    <!-- Custom Analytics Events -->
+    <script define:vars={{ NODE_ENV: import.meta.env.NODE_ENV }}>
+      // Analytics event tracking
+      window.trackEvent = function(eventName, props = {}) {
+        if (typeof plausible !== 'undefined') {
+          plausible(eventName, { props: props });
+        }
+
+        // Also track to local storage for offline usage tracking
+        try {
+          const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+          events.push({
+            name: eventName,
+            props: props,
+            timestamp: Date.now(),
+            url: window.location.href,
+            path: window.location.pathname
+          });
+          localStorage.setItem('analytics_events', JSON.stringify(events.slice(-100))); // Keep last 100
+        } catch (e) {
+          console.warn('Analytics storage failed:', e);
+        }
+      };
+
+      // Page view tracking
+      window.trackPageView = function(path) {
+        if (typeof plausible !== 'undefined') {
+          plausible('pageview', { u: path || window.location.href });
+        }
+      };
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <Navigation />
+
+    <main class="flex-grow">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <!-- Service Worker Registration for PWA -->
+    <ServiceWorkerRegistration />
+
+    <!-- Educational Optimizations -->
+    <EducationalOptimizations />
+
+    <!-- Load non-critical scripts asynchronously -->
+    <script>
+      // Load non-critical scripts after page load
+      window.addEventListener('load', () => {
+        // Analytics scripts (if any) would go here
+        console.log('Page fully loaded - loading non-critical resources');
+
+        // Example: Lazy load a third-party script
+        // const script = document.createElement('script');
+        // script.src = 'https://example.com/analytics.js';
+        // script.async = true;
+        // document.body.appendChild(script);
+      });
+
+      // Optimize scrolling performance
+      document.addEventListener('DOMContentLoaded', () => {
+        // Use passive event listeners for better scrolling performance
+        const options = { passive: true };
+        document.addEventListener('touchstart', () => {}, options);
+        document.addEventListener('wheel', () => {}, options);
+      });
+    </script>
+  </body>
+</html>

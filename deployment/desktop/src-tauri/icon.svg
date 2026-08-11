@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#3B82F6" rx="200" ry="200"/>
+
+  <!-- Grid pattern representing spreadsheet -->
+  <g fill="none" stroke="#ffffff" stroke-width="40">
+    <!-- Horizontal lines -->
+    <line x1="150" y1="280" x2="874" y2="280"/>
+    <line x1="150" y1="450" x2="874" y2="450"/>
+    <line x1="150" y1="620" x2="874" y2="620"/>
+    <line x1="150" y1="790" x2="874" y2="790"/>
+
+    <!-- Vertical lines -->
+    <line x1="312" y1="150" x2="312" y2="874"/>
+    <line x1="474" y1="150" x2="474" y2="874"/>
+    <line x1="636" y1="150" x2="636" y2="874"/>
+  </g>
+
+  <!-- Accent circle in first cell (represents AI/active cell) -->
+  <circle cx="230" cy="230" r="50" fill="#10B981"/>
+</svg>

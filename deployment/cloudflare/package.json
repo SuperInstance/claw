@@ -1,0 +1,59 @@
+{
+  "name": "spreadsheetmoment-cloudflare",
+  "version": "1.0.0",
+  "description": "SpreadsheetMoment - Cloudflare Workers deployment",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "tail:staging": "wrangler tail --env staging",
+    "tail:production": "wrangler tail --env production",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "build": "tsc",
+    "build:worker": "tsc",
+    "db:migrate": "wrangler d1 execute spreadsheetmoment-prod --file=migrations/001_initial_schema.sql",
+    "db:migrate:staging": "wrangler d1 execute spreadsheetmoment-staging --file=migrations/001_initial_schema.sql",
+    "db:backup": "node scripts/backup-db.js",
+    "db:restore": "node scripts/restore-db.js",
+    "vectorize:create": "wrangler vectorize create spreadsheetmoment-cells --dimensions=1536 --metric=cosine",
+    "vectorize:upload": "node scripts/upload-embeddings.js",
+    "kv:purge": "wrangler kv:namespace delete --bulk --namespace-id=$(jq -r '.kv_namespaces[0].id' wrangler.toml)",
+    "logs": "wrangler tail --format pretty",
+    "metrics": "wrangler metrics --format json",
+    "cost": "wrangler usage"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "graphql": "^16.13.1",
+    "graphql-ws": "^6.0.7",
+    "itty-router": "^4.0.20",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.1.0",
+    "@playwright/test": "^1.40.1",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0",
+    "wrangler": "^3.22.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

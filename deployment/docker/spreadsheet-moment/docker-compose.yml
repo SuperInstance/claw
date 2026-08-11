@@ -1,0 +1,76 @@
+# Spreadsheet Moment - Docker Compose for Local development
+# Full-stack development environment with all services
+# Startup time: ~30 seconds
+
+# Services: 7000
+
+version: '3.9'
+
+services:
+  graphql-api:
+    image: spreadsheet-moment/graphql-api:latest
+    build:
+      context: .
+      dockerfile: deployment/docker/spreadsheet-moment/Dockerfile.graphql
+      target: production
+    ports:
+      - "4000:4000"4000:4001
+4002
+4002
+4004
+4002
+      - "4001:3001"3001"
+      - "9229:9229:9464:9229"
+      - "4002:4002"
+      - "5432:5432"
+      - "4004:4005"
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTgres_PORT=5432
+      - POSTGRES_USER=spreadsheet
+      - POSTgres_PASSWORD=spreadsheet_dev_password
+      - POSTGRES_MAX_connections=200
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - ANAL
+_PORT=4001
+      - community_port=4004
+
+      - subscription_port=4002
+      - websocketPort=4003
+      - minio_endpoint=http://minio:9000
+      - postgres:postgres:5432
+      - postgres:postgres:5432
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://minio:9000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Initialize PostgreSQL schema
+  postgres-init:
+    image: postgres:15-alpine
+    container_name: spreadsheet-postgres-init
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spreadsheet -d spreadsheet_moment"]
+      interval: 10s
+      timeout: 5s
+      retries:
+      start_period: 10s
+    environment:
+      - POSTGRES_PASSWORD=spreadsheet_dev_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - polln-network
+

@@ -1,0 +1,100 @@
+# Artillery WebSocket Load Test - Baseline
+# Tests baseline WebSocket performance with 500 concurrent connections
+
+config:
+  target: "ws://localhost:4000"
+  phases:
+    - duration: 60
+      arrivalRate: 8
+      name: "Baseline - 500 concurrent connections"
+  processor: "./websocket-processor.js"
+  variables:
+    testScenario: "baseline"
+
+scenarios:
+  - name: "WebSocket Collaboration Session"
+    engine: ws
+    flow:
+      - connect: "/"
+      - send:
+          payload: |
+            {
+              "type": "auth",
+              "token": "{{ $testToken }}",
+              "scenario": "{{ $testScenario }}"
+            }
+      - think: 1
+
+      # Subscribe to spreadsheet updates
+      - send:
+          payload: |
+            {
+              "type": "subscribe",
+              "channel": "spreadsheet:{{ $spreadsheetId }}",
+              "events": ["cell:update", "cursor:move", "user:join", "user:leave"]
+            }
+
+      # Wait for subscription confirmation
+      - think: 2
+
+      # Simulate user joining
+      - send:
+          payload: |
+            {
+              "type": "presence:join",
+              "spreadsheetId": "{{ $spreadsheetId }}",
+              "user": {
+                "id": "{{ $userId }}",
+                "name": "Test User {{ $userId }}",
+                "color": "#FF5722"
+              }
+            }
+
+      # Main collaboration loop
+      - loop:
+          - send:
+              payload: |
+                {
+                  "type": "cell:update",
+                  "spreadsheetId": "{{ $spreadsheetId }}",
+                  "update": {
+                    "row": {{ $randomNumber(0, 99) }},
+                    "col": {{ $randomNumber(0, 25) }},
+                    "value": "{{ $randomString() }}",
+                    "timestamp": {{ $timestamp() }}
+                  }
+                }
+          - think: "{{ $randomNumber(1, 3) }}"
+
+          # Send cursor position
+          - send:
+              payload: |
+                {
+                  "type": "cursor:move",
+                  "spreadsheetId": "{{ $spreadsheetId }}",
+                  "position": {
+                    "row": {{ $randomNumber(0, 99) }},
+                    "col": {{ $randomNumber(0, 25) }}
+                  }
+                }
+          - think: "{{ $randomNumber(0, 1) }}"
+
+        count: 20
+
+      # Unsubscribe before disconnecting
+      - send:
+          payload: |
+            {
+              "type": "unsubscribe",
+              "channel": "spreadsheet:{{ $spreadsheetId }}"
+            }
+
+      # Graceful disconnect
+      - send:
+          payload: |
+            {
+              "type": "presence:leave",
+              "spreadsheetId": "{{ $spreadsheetId }}"
+            }
+      - think: 1
+      - disconnect: true

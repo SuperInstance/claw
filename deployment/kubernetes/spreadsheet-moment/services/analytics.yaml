@@ -1,0 +1,220 @@
+# Spreadsheet Moment - Analytics Service Deployment
+# Handles data processing, ML inference, and analytics
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: spreadsheet-moment
+  labels:
+    app: analytics-service
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: analytics
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+        app.kubernetes.io/name: spreadsheet-moment
+        app.kubernetes.io/component: analytics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9464"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: spreadsheet-moment-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: analytics
+        image: spreadsheet-moment/analytics:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 4001
+          protocol: TCP
+        - name: metrics
+          containerPort: 9464
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: ANALYTICS_PORT
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: spreadsheet-moment-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: spreadsheet-moment-secrets
+              key: redis-url
+        - name: ANALYTICS_BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: ANALYTICS_BATCH_SIZE
+        - name: ANALYTICS_FLUSH_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: ANALYTICS_FLUSH_INTERVAL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "4000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4001
+          initialDelaySeconds: 45
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 4001
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: analytics-data
+          mountPath: /app/data
+        - name: analytics-logs
+          mountPath: /app/logs
+        - name: analytics-models
+          mountPath: /app/models
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: analytics-data
+        emptyDir: {}
+      - name: analytics-logs
+        emptyDir: {}
+      - name: analytics-models
+        persistentVolumeClaim:
+          claimName: analytics-models-pvc
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: analytics-service
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+  namespace: spreadsheet-moment
+  labels:
+    app: analytics-service
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: analytics
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4001
+    targetPort: 4001
+    protocol: TCP
+    name: http
+  - port: 9464
+    targetPort: 9464
+    protocol: TCP
+    name: metrics
+  selector:
+    app: analytics-service
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: analytics-service-hpa
+  namespace: spreadsheet-moment
+  labels:
+    app: analytics-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: analytics-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 1
+        periodSeconds: 30
+      selectPolicy: Max
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: analytics-service-pdb
+  namespace: spreadsheet-moment
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: analytics-service

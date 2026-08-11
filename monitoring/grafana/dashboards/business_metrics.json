@@ -1,0 +1,447 @@
+{
+  "dashboard": {
+    "title": "Spreadsheet Moment - Business Metrics",
+    "tags": ["business", "kpi", "revenue"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "1m",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Daily Active Users (DAU)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "business:dau:count",
+            "legendFormat": "DAU",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Active Users"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [50], "type": "lt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "15m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "5m",
+          "handler": 1,
+          "message": "Active user count is below 50",
+          "name": "Low Active Users",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Monthly Active Users (MAU)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "business:mau:count",
+            "legendFormat": "MAU",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Active Users"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "DAU/MAU Ratio",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "(business:dau:count / business:mau:count) * 100",
+            "legendFormat": "DAU/MAU Ratio",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Ratio"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "User Retention Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "business:retention:percent",
+            "legendFormat": "Retention Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Retention Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Revenue Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "business:revenue_rate:per_hour",
+            "legendFormat": "Revenue/Hour",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "Revenue"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0], "type": "eq"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "2h", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1h",
+          "handler": 1,
+          "message": "No revenue generated in the last 2 hours",
+          "name": "Zero Revenue Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Total Revenue",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "revenue_total",
+            "legendFormat": "Total Revenue",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 1000, "color": "yellow"},
+                {"value": 10000, "color": "orange"},
+                {"value": 50000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Conversion Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "business:conversion_rate:percent",
+            "legendFormat": "Conversion Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Conversion Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Cart Abandonment Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "business:cart_abandonment:percent",
+            "legendFormat": "Cart Abandonment",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Abandonment Rate"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [70], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "1h", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "30m",
+          "handler": 1,
+          "message": "Cart abandonment rate is above 70%",
+          "name": "High Cart Abandonment",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 9,
+        "title": "Feature Usage",
+        "type": "piechart",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "sum(increase(feature_usage_total[1h])) by (feature_name)",
+            "legendFormat": "{{feature_name}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right"
+          },
+          "pieType": "pie",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Feature Usage Over Time",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 32},
+        "targets": [
+          {
+            "expr": "business:feature_usage:per_second",
+            "legendFormat": "{{feature_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "ops", "label": "Operations/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 11,
+        "title": "User Acquisition Funnel",
+        "type": "bargauge",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 42},
+        "targets": [
+          {
+            "expr": "unique_visitors_total",
+            "legendFormat": "Unique Visitors",
+            "refId": "A"
+          },
+          {
+            "expr": "signups_total",
+            "legendFormat": "Signups",
+            "refId": "B"
+          },
+          {
+            "expr": "active_users_total",
+            "legendFormat": "Active Users",
+            "refId": "C"
+          },
+          {
+            "expr": "paying_customers_total",
+            "legendFormat": "Paying Customers",
+            "refId": "D"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 500, "color": "orange"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Average Revenue Per User (ARPU)",
+        "type": "graph",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 42},
+        "targets": [
+          {
+            "expr": "revenue_total / active_users_total",
+            "legendFormat": "ARPU",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "Revenue per User"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Customer Lifetime Value (CLV)",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 0, "y": 52},
+        "targets": [
+          {
+            "expr": "customer_lifetime_value_total",
+            "legendFormat": "CLV",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Churn Rate",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 6, "y": 52},
+        "targets": [
+          {
+            "expr": "(churned_users_total / total_users_total) * 100",
+            "legendFormat": "Churn Rate",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Session Duration",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 12, "y": 52},
+        "targets": [
+          {
+            "expr": "avg(session_duration_seconds)",
+            "legendFormat": "Session Duration",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m"
+          }
+        }
+      },
+      {
+        "id": 16,
+        "title": "Page Views per Session",
+        "type": "stat",
+        "gridPos": {"h": 5, "w": 6, "x": 18, "y": 52},
+        "targets": [
+          {
+            "expr": "page_views_total / sessions_total",
+            "legendFormat": "Pages/Session",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      }
+    ]
+  }
+}

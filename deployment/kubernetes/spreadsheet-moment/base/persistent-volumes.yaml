@@ -1,0 +1,50 @@
+# Spreadsheet Moment - Persistent Volume Claims
+# Production storage configuration for all stateful workloads
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: analytics-models-pvc
+  namespace: spreadsheet-moment
+  labels:
+    app: analytics
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-models-pvc
+  namespace: spreadsheet-moment
+  labels:
+    app: ml-inference
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 50Gi
+---
+# StorageClass for production (if using cloud provider)
+# Uncomment and customize for your cloud provider:
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: standard
+# provisioner: kubernetes.io/aws-ebs # For AWS
+# # For GCP:
+# # provisioner: kubernetes.io/gce-pd
+# # For Azure
+# # provisioner: kubernetes.io/azure-disk
+# parameters:
+#   type: gp2 # AWS: gp2, GCP: pd-balanced, Azure: StandardSSD_LRS

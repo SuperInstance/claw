@@ -1,0 +1,18 @@
+Package: spreadsheet-moment
+Version: 0.1.0
+Architecture: amd64
+Maintainer: SuperInstance <team@superinstance.ai>
+Installed-Size: 45000
+Section: utils
+Priority: optional
+Homepage: https://spreadsheet-moment.superinstance.ai
+Description: Next-generation spreadsheet with AI-powered collaboration
+ Spreadsheet Moment is a revolutionary spreadsheet application that combines
+ tensor-based computation, natural language processing, and real-time
+ collaboration. Features include:
+  - Tensor operations with automatic differentiation
+  - NLP cell editor for natural language queries
+  - Real-time multi-user collaboration
+  - Temperature-based data propagation
+  - Vector search for semantic cell discovery
+  - Bio-inspired consensus algorithms

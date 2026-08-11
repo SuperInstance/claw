@@ -1,0 +1,432 @@
+{
+  "dashboard": {
+    "title": "Spreadsheet Moment - Security Events",
+    "tags": ["security", "auth", "threats"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Failed Authentication Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "security:auth_failure_rate:per_second",
+            "legendFormat": "Failed Auth",
+            "refId": "A"
+          },
+          {
+            "expr": "security:auth_success_rate:per_second",
+            "legendFormat": "Success Auth",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "cps", "label": "Auth Attempts/sec"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [10], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "High failed authentication rate detected",
+          "name": "High Auth Failure Rate",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Failed Authentication by IP",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "topk(20, sum(rate(auth_failed_total[5m])) by (source_ip))",
+            "legendFormat": "{{source_ip}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "source_ip": "Source IP",
+                "Value": "Failed Attempts"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "SQL Injection Attempts",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "security:sql_injection_attempts:per_second",
+            "legendFormat": "SQL Injection Attempts",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "cps", "label": "Attempts/sec"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "1m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "30s",
+          "handler": 1,
+          "message": "SQL injection attempts detected",
+          "name": "SQL Injection Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 4,
+        "title": "XSS Attempts",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "security:xss_attempts:per_second",
+            "legendFormat": "XSS Attempts",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "cps", "label": "Attempts/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Rate Limit Violations",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "security:rate_limit_violations:per_second",
+            "legendFormat": "{{source_ip}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "cps", "label": "Violations/sec"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [100], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "High rate limit violations detected",
+          "name": "Rate Limit Alert",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Blocked Requests",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "security:blocked_requests:per_second",
+            "legendFormat": "Blocked Requests",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Total Requests",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "cps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Threat Level",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "security:threat_level:score",
+            "legendFormat": "Threat Level",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 30, "color": "yellow"},
+                {"value": 70, "color": "orange"},
+                {"value": 90, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Security Events Summary",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(increase(security_sql_injection_attempts_total[1h]))",
+            "legendFormat": "SQL Injection (1h)",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(increase(severity_xss_attempts_total[1h]))",
+            "legendFormat": "XSS Attempts (1h)",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(increase(auth_failed_total[1h]))",
+            "legendFormat": "Failed Auth (1h)",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(increase(security_blocked_requests_total[1h]))",
+            "legendFormat": "Blocked Requests (1h)",
+            "refId": "D"
+          }
+        ],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 100, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Authentication Success Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "(sum(rate(auth_success_total[5m])) / sum(rate(auth_attempts_total[5m]))) * 100",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Success Rate"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [90], "type": "lt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Authentication success rate is below 90%",
+          "name": "Low Auth Success Rate",
+          "noDataState": "no_data"
+        }
+      },
+      {
+        "id": 10,
+        "title": "Top Blocked IPs",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+        "targets": [
+          {
+            "expr": "topk(20, sum(rate(security_blocked_requests_total[5m])) by (source_ip))",
+            "legendFormat": "{{source_ip}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "source_ip": "Source IP",
+                "Value": "Blocked Requests"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Malicious User Agents",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+        "targets": [
+          {
+            "expr": "topk(20, sum(rate(security_blocked_requests_total[5m])) by (user_agent))",
+            "legendFormat": "{{user_agent}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "user_agent": "User Agent",
+                "Value": "Blocked Requests"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "GeoIP Distribution of Threats",
+        "type": "geomap",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+        "targets": [
+          {
+            "expr": "sum(rate(security_blocked_requests_total[5m])) by (country_code)",
+            "legendFormat": "{{country_code}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "view": {
+            "id": "zoom",
+            "lat": 0,
+            "lon": 0,
+            "zoom": 1
+          },
+          "layer": {
+            "type": "regions",
+            "location": {
+              "mode": "auto"
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Security Event Timeline",
+        "type": "timeline",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 48},
+        "targets": [
+          {
+            "expr": "security_sql_injection_attempts_total",
+            "legendFormat": "SQL Injection",
+            "refId": "A"
+          },
+          {
+            "expr": "security_xss_attempts_total",
+            "legendFormat": "XSS Attempt",
+            "refId": "B"
+          },
+          {
+            "expr": "auth_failed_total",
+            "legendFormat": "Failed Auth",
+            "refId": "C"
+          },
+          {
+            "expr": "security_blocked_requests_total",
+            "legendFormat": "Blocked Request",
+            "refId": "D"
+          }
+        ],
+        "options": {
+          "showLegend": true,
+          "legendPlacement": "bottom"
+        }
+      }
+    ]
+  }
+}

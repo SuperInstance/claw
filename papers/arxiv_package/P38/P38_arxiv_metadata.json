@@ -1,0 +1,27 @@
+{
+  "title": "Meta-Learning",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.LG",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Meta-learning enables AI systems to learn how to learn, acquiring knowledge and strategies that generalize across tasks rather than solving individual tasks in isolation. This paper introduces hierarchical meta-learning frameworks that combine task-level learning with meta-level optimization, enabling systems to adapt to new tasks with 10\u00d7 fewer examples and 3.7\u00d7 faster convergence compared to standard transfer learning approaches. We demonstrate that meta-learned initializatio",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P38",
+  "journal_ref": "",
+  "keywords": [
+    "Meta-Learning",
+    "Few-Shot Learning",
+    "Learning to Learn",
+    "Rapid Adaptation",
+    "MAML"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

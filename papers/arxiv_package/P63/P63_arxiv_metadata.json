@@ -1,0 +1,21 @@
+{
+  "title": "Phylogenetic Confidence Cascades for Origin-Centric Systems",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.MA",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Origin-Centric Data Systems (OCDS) require confidence propagation across potentially unreliable network paths. Current methods use exponential decay but fail to handle missing data and network partitions, leading to inaccurate state estimates and cascading errors. We propose phylogenetic confidence cascades, adapting ancestral sequence reconstruction algorithms from computational biology to distributed systems. Our method models the origin graph as a phylogenetic tree; confidence at",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P63",
+  "journal_ref": "",
+  "keywords": [],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

@@ -1,0 +1,190 @@
+# Spreadsheet Moment - GPU Node Pool Configuration
+# For ML/AI workloads requiring GPU acceleration
+
+# Prerequisites:
+# 1. NVIDIA GPU Operator installed
+# 2. GPU nodes with NVIDIA A100/A10G/V100 GPUs
+# 3. NVIDIA driver version 535+ recommended
+
+# Install NVIDIA GPU Operator first:
+# helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
+# helm install gpu-operator nvidia/gpu-operator -n gpu-operator --create-namespace
+
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: nvidia
+handler: nvidia
+---
+# GPU Node Pool - Nodes with GPU resources
+# Apply this to your cluster to label GPU nodes
+# kubectl label nodes <gpu-node-name> accelerator=nvidia-gpu
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-inference-service
+  namespace: spreadsheet-moment
+  labels:
+    app: ml-inference
+    app.kubernetes.io/name: spreadsheet-moment
+    app.kubernetes.io/component: ml
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-inference
+  template:
+    metadata:
+      labels:
+        app: ml-inference
+        app.kubernetes.io/name: spreadsheet-moment
+        app.kubernetes.io/component: ml
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9464"
+    spec:
+      runtimeClassName: nvidia
+      nodeSelector:
+        accelerator: nvidia-gpu
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+      - name: ml-inference
+        image: spreadsheet-moment/ml-inference:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 5000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9464
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "all"
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: "compute,utility"
+        - name: CUDA_VISIBLE_DEVICES
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: CUDA_VISIBLE_DEVICES
+        - name: TF_FORCE_GPU_ALLOW_GROWTH
+          valueFrom:
+            configMapKeyRef:
+              name: spreadsheet-moment-config
+              key: TF_FORCE_GPU_ALLOW_GROWTH
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: spreadsheet-moment-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: spreadsheet-moment-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+            nvidia.com/gpu: "1"
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+            nvidia.com/gpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: ml-models
+          mountPath: /app/models
+        - name: ml-cache
+          mountPath: /app/.cache
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: ml-models
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+      - name: ml-cache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-inference
+  namespace: spreadsheet-moment
+  labels:
+    app: ml-inference
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: http
+  - port: 9464
+    targetPort: 9464
+    name: metrics
+  selector:
+    app: ml-inference
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-models-pvc
+  namespace: spreadsheet-moment
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 50Gi
+---
+# GPU Node Autoscaler (optional - for GKE/EKS)
+# apiVersion: autoscaling/v2
+# kind: HorizontalPodAutoscaler
+# metadata:
+#   name: ml-inference-hpa
+#   namespace: spreadsheet-moment
+# spec:
+#   scaleTargetRef:
+#     apiVersion: apps/v1
+#     kind: Deployment
+#     name: ml-inference-service
+#   minReplicas: 1
+#   maxReplicas: 5
+#   metrics:
+#   - type: Resource
+#     resource:
+#       name: nvidia.com/gpu
+#       target:
+#         type: Utilization
+#         averageUtilization: 80

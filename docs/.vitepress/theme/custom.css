@@ -1,0 +1,253 @@
+/**
+ * Custom styles for Spreadsheet Moment documentation
+ */
+
+:root {
+  --vp-c-brand-1: #3c8772;
+  --vp-c-brand-2: #357a65;
+  --vp-c-brand-3: #2e6d59;
+  --vp-home-hero-name-color: #3c8772;
+  --vp-home-hero-name-background: linear-gradient(120deg, #3c8772 0%, #5ab09a 100%);
+  --vp-button-brand-bg: #3c8772;
+  --vp-button-brand-hover-bg: #357a65;
+  --vp-button-brand-active-bg: #2e6d59;
+}
+
+.dark {
+  --vp-c-brand-1: #5ab09a;
+  --vp-c-brand-2: #4a9a84;
+  --vp-c-brand-3: #3a846e;
+}
+
+/* Custom code playground styles */
+.code-playground {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.playground-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--vp-c-bg-soft);
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.playground-editor {
+  min-height: 200px;
+}
+
+.playground-output {
+  background: var(--vp-c-bg-soft);
+  border-top: 1px solid var(--vp-c-border);
+  padding: 16px;
+}
+
+/* API explorer styles */
+.api-explorer {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.explorer-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.explorer-section:last-child {
+  border-bottom: none;
+}
+
+/* Interactive tutorial styles */
+.tutorial-progress {
+  margin: 16px 0;
+}
+
+.tutorial-step {
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+}
+
+.tutorial-step.completed {
+  background: var(--vp-c-bg-soft);
+  border-color: var(--vp-c-brand-1);
+}
+
+/* Mermaid diagram styles */
+.mermaid {
+  text-align: center;
+  margin: 16px 0;
+}
+
+/* Custom info boxes */
+.info-box {
+  padding: 16px;
+  margin: 16px 0;
+  border-left: 4px solid var(--vp-c-brand-1);
+  background: var(--vp-c-bg-soft);
+  border-radius: 4px;
+}
+
+.info-box.info {
+  border-left-color: var(--vp-c-info-1);
+}
+
+.info-box.warning {
+  border-left-color: var(--vp-c-warning-1);
+}
+
+.info-box.danger {
+  border-left-color: var(--vp-c-danger-1);
+}
+
+.info-box.success {
+  border-left-color: var(--vp-c-success-1);
+}
+
+/* Code comparison diff */
+.code-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.code-comparison-single {
+  grid-template-columns: 1fr;
+}
+
+.code-panel {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-panel-header {
+  padding: 8px 16px;
+  background: var(--vp-c-bg-soft);
+  border-bottom: 1px solid var(--vp-c-border);
+  font-weight: 600;
+}
+
+/* Video embed styles */
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Feature cards */
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.feature-card {
+  padding: 24px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.feature-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feature-description {
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+}
+
+/* Tabs component */
+.tabs {
+  margin: 16px 0;
+}
+
+.tab-list {
+  display: flex;
+  border-bottom: 1px solid var(--vp-c-border);
+  margin-bottom: 16px;
+}
+
+.tab-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-item.active {
+  border-bottom-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .code-comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vp-c-bg-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-brand-1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-brand-2);
+}

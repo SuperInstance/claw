@@ -1,0 +1,294 @@
+# Spreadsheet Moment - Network Policies
+# Implements zero-trust network segmentation
+
+# Default deny all ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: spreadsheet-moment
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - {}
+  ingress:
+  - {}
+---
+# Allow DNS resolution
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: spreadsheet-moment
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+      namespaceSelector: {}
+      ipBlock:
+      - 10.0.0.10
+    ports:
+    - protocol: UDP
+      port: 53
+---
+# GraphQL API Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: graphql-api-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app: graphql-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/component: ingress
+    ports:
+    - protocol: TCP
+      port: 4000
+  egress:
+  # Allow database access
+  - to:
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+      podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow MinIO access
+  - to:
+      podSelector:
+        matchLabels:
+          app: minio
+    ports:
+    - protocol: TCP
+      port: 9000
+  # Allow analytics service access
+  - to:
+      podSelector:
+        matchLabels:
+          app: analytics-service
+    ports:
+    - protocol: TCP
+      port: 4001
+---
+# Analytics Service Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: analytics-service-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app: analytics-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      podSelector:
+        matchLabels:
+          app: graphql-api
+    ports:
+    - protocol: TCP
+      port: 4001
+  egress:
+  # Allow database access
+  - to:
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+      podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow ML inference access
+  - to:
+      podSelector:
+        matchLabels:
+          app: ml-inference
+    ports:
+    - protocol: TCP
+      port: 5000
+---
+# Subscription Service Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: subscription-service-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app: subscription-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/component: ingress
+    ports:
+    - protocol: TCP
+      port: 4002
+      port: 4003
+  egress:
+  # Allow database access
+  - to:
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+      podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+---
+# Community Service Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: community-service-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app: community-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      podSelector:
+        matchLabels:
+          app: graphql-api
+    ports:
+    - protocol: TCP
+      port: 4004
+  egress:
+  # Allow database access
+  - to:
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+      podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+---
+# ML Inference Service Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ml-inference-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app: ml-inference
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      podSelector:
+        matchLabels:
+          app: analytics-service
+    ports:
+    - protocol: TCP
+      port: 5000
+  egress:
+  # Allow database access
+  - to:
+      podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis access
+  - to:
+      podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow MinIO for model storage
+  - to:
+      podSelector:
+        matchLabels:
+          app: minio
+    ports:
+    - protocol: TCP
+      port: 9000
+---
+# Monitoring Stack Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-policy
+  namespace: spreadsheet-moment
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+      namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+      port: 3000
+  egress:
+  # Allow access to all services for metrics scraping
+  - to:
+      podSelector: {}

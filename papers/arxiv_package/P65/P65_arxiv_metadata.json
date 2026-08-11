@@ -1,0 +1,21 @@
+{
+  "title": "Molecular Game-Theoretic Framework for Multi-Agent Consensus",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "q-bio",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "Multi-agent consensus systems lack formal guarantees of stability and optimality. We introduce a molecular game-theoretic framework, modeling agent interactions as evolutionary games. Each agent (Pathos, Logos, Ethos) is a \"species\" with strategies; consensus decisions are evolutionary equilibria. We prove that tripartite consensus is an Evolutionary Stable Strategy (ESS): no single-perspective mutant can invade the three-perspective equilibrium. The framework derives optimal domain we",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P65",
+  "journal_ref": "",
+  "keywords": [],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

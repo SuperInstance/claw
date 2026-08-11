@@ -1,0 +1,170 @@
+{{/*
+Main deployment template for Spreadsheet Moment services
+*/}}
+{{- range .Values.services | default (dict "graphql" .Values.graphqlApi "analytics" .Values.analyticsService "subscription" .Values.subscriptionService "community" .Values.communityService) }}
+{{- $service := . }}
+{{- $serviceName := .key }}
+{{- if $service.enabled }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ $.Release.Namespace | default "spreadsheet-moment" }}
+  labels:
+    {{- include "labels.selector" (dict "app" $serviceName) | nindent 4 }}
+    {{- include "labels.standard" . | nindent 4 }}
+spec:
+  replicas: {{ $service.replicaCount | default 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "labels.selector" (dict "app" $serviceName) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "labels.selector" (dict "app" $serviceName) | nindent 8 }}
+        {{- include "labels.standard" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9464"
+        prometheus.io/path: "/metrics"
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      {{- if .Values.podSecurity.enabled }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      {{- end }}
+      containers:
+      - name: {{ $serviceName }}
+        image: "{{ $service.image.repository }}/{{ $service.image.name }}:{{ $service.image.tag }}"
+        imagePullPolicy: {{ $service.image.pullPolicy | default "Always" }}
+        ports:
+        - name: http
+          containerPort: {{ $service.service.port }}
+          protocol: TCP
+        - name: metrics
+          containerPort: 9464
+          protocol: TCP
+        env:
+        {{- if $service.env }}
+        {{- range $key, $value := $service.env }}
+        - name: {{ $key | upper }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $.Values.configMapName | default "spreadsheet-moment-config" }}
+              key: NODE_ENV
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ $.Values.secretName | default "spreadsheet-moment-secrets" }}
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ $.Values.secretName | default "spreadsheet-moment-secrets" }}
+              key: redis-url
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $.Values.configMapName | default "spreadsheet-moment-config" }}
+              key: LOG_LEVEL
+        {{- include "resources" $service | nindent 8 }}
+        {{- $probeConfig := dict "path" "/health" "port" $service.service.port }}
+        {{- include "probes.http" $probeConfig | nindent 8 }}
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+        {{- include "containerSecurityContext" . | nindent 8 }}
+      volumes:
+      - name: data
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      {{- if $service.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $service.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $service.tolerations }}
+      tolerations:
+        {{- toYaml $service.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  {{- include "labels.selector" (dict "app" $serviceName) | nindent 18 }}
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ $.Release.Namespace | default "spreadsheet-moment" }}
+  labels:
+    {{- include "labels.selector" (dict "app" $serviceName) | nindent 4 }}
+spec:
+  type: {{ $service.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ $service.service.port }}
+    targetPort: {{ $service.service.port }}
+    protocol: TCP
+    name: http
+  - port: 9464
+    targetPort: 9464
+    protocol: TCP
+    name: metrics
+  selector:
+    {{- include "labels.selector" (dict "app" $serviceName) | nindent 4 }}
+{{- if $service.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $serviceName }}-hpa
+  namespace: {{ $.Release.Namespace | default "spreadsheet-moment" }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $serviceName }}
+  minReplicas: {{ $service.autoscaling.minReplicas | default 2 }}
+  maxReplicas: {{ $service.autoscaling.maxReplicas | default 10 }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ $service.autoscaling.targetCPUUtilization | default 70 }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ $service.autoscaling.targetMemoryUtilization | default 80 }}
+{{- end }}
+{{- end }}
+{{- end }}

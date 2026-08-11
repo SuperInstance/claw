@@ -1,0 +1,193 @@
+# Prometheus Alert Rules for Load Testing
+
+groups:
+  - name: load_test_alerts
+    interval: 30s
+    rules:
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s (threshold: 0.1s)"
+
+      - alert: CriticalResponseTime
+        expr: histogram_quantile(0.99, http_request_duration_seconds_bucket) > 0.5
+        for: 30s
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical response time detected"
+          description: "99th percentile response time is {{ $value }}s (threshold: 0.5s)"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.01
+        for: 1m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%)"
+
+      - alert: CriticalErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[1m]) > 0.05
+        for: 30s
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # Throughput Alerts
+      - alert: LowThroughput
+        expr: rate(http_requests_total[5m]) < 100
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Low throughput detected"
+          description: "Request rate is {{ $value }}/s (threshold: 100/s)"
+
+      - alert: DegradedThroughput
+        expr: rate(http_requests_total[2m]) < 50
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Degraded throughput detected"
+          description: "Request rate is {{ $value }}/s (threshold: 50/s)"
+
+      # Database Alerts
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.9
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of connections used"
+
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, pg_stat_statements_duration_seconds_bucket) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s"
+
+      # Cache Alerts
+      - alert: LowCacheHitRate
+        expr: rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) < 0.8
+        for: 2m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      - alert: CriticalCacheHitRate
+        expr: rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) < 0.5
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Critical cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 50%)"
+
+      # Resource Alerts
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / node_memory_MemTotal_bytes > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: CriticalMemoryUsage
+        expr: process_resident_memory_bytes / node_memory_MemTotal_bytes > 0.95
+        for: 1m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # WebSocket Alerts
+      - alert: HighWebSocketLatency
+        expr: histogram_quantile(0.95, websocket_message_latency_seconds_bucket) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket latency"
+          description: "95th percentile latency is {{ $value }}s"
+
+      - alert: WebSocketConnectionDrops
+        expr: rate(websocket_disconnections_total[5m]) / rate(websocket_connections_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket disconnection rate"
+          description: "Disconnection rate is {{ $value | humanizePercentage }}"
+
+  - name: load_test_metrics
+    interval: 15s
+    rules:
+      # Custom metrics for load testing
+      - record: load_test:requests_per_second
+        expr: rate(http_requests_total[1m])
+
+      - record: load_test:p95_response_time
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket)
+
+      - record: load_test:p99_response_time
+        expr: histogram_quantile(0.99, http_request_duration_seconds_bucket)
+
+      - record: load_test:error_rate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])
+
+      - record: load_test:cache_hit_rate
+        expr: rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m]))
+
+      - record: load_test:database_connection_utilization
+        expr: pg_stat_activity_count / pg_settings_max_connections
+
+      - record: load_test:active_websocket_connections
+        expr: websocket_connections_current
+
+      - record: load_test:memory_utilization
+        expr: process_resident_memory_bytes / node_memory_MemTotal_bytes
+
+      - record: load_test:cpu_utilization
+        expr: rate(process_cpu_seconds_total[5m])

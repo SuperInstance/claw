@@ -1,0 +1,27 @@
+{
+  "title": "Game-Theoretic Teaching",
+  "authors": [
+    {
+      "forename": "SuperInstance",
+      "surname": "Research Team",
+      "affiliation": "SuperInstance Project"
+    }
+  ],
+  "categories": [
+    "cs.AI",
+    "cs.AI",
+    "cs.LG"
+  ],
+  "abstract": "We present Game-Theoretic Teaching, a framework for analyzing and optimizing adaptive educational systems through the lens of game theory. We model teaching as a sequential game between teacher and student, where: (1) teacher selects teaching method from 15 options (Socratic, storytelling, visual, kinesthetic, etc.), (2) student selects learning strategy (attention depth, question frequency, engagement level), (3) payoff = learning outcome measured by retention and transf",
+  "comments": "25 pages, 10 figures, submitted to arXiv on 2026-03-15",
+  "report_no": "P58",
+  "journal_ref": "",
+  "keywords": [
+    "Game Theory",
+    "Adaptive Teaching",
+    "Nash Equilibrium",
+    "Cross-Cultural Education",
+    "Multi-Armed Bandits"
+  ],
+  "license": "http://creativecommons.org/licenses/by/4.0/"
+}

@@ -1,0 +1,7 @@
+# Ignore accessibility test results
+*.json
+*.html
+*.xml
+
+# But keep the directory
+!.gitignore
