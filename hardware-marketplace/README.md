@@ -1,0 +1,1 @@
+# 🌌 HARDWARE MARKETPLACE\n\n## 🎯 Mission Statement\nDecentralized, agentic marketplace for specialized equipment.\n\n## 🏛️ Principles\n- Agentic Autonomy\n- Decentralized Provenance\n- Resource-Awareness\n\n## 🌐 Connectivity\n- [Claw Engine](https://github.com/SuperInstance/claw)\n- [Spreadsheet Moment](https://github.com/SuperInstance/spreadsheet-moment)

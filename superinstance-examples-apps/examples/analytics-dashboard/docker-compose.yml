@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  analytics-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_CLAW_ENDPOINT=ws://claw-service:8080
+      - VITE_GEO_ENDPOINT=http://geo-service:3001
+      - VITE_CLAW_API_KEY=${CLAW_API_KEY}
+      - VITE_AGENT_COUNT=1000
+    depends_on:
+      - claw-service
+      - geo-service
+    restart: unless-stopped
+    networks:
+      - superinstance
+
+  claw-service:
+    image: superinstance/claw:latest
+    container_name: claw-service
+    ports:
+      - "8080:8080"
+    environment:
+      - CLAW_API_KEY=${CLAW_API_KEY}
+      - CLAW_MAX_AGENTS=10000
+      - CLAW_LOG_LEVEL=info
+    volumes:
+      - claw-data:/app/data
+    restart: unless-stopped
+    networks:
+      - superinstance
+
+  geo-service:
+    image: superinstance/constrainttheory:latest
+    container_name: geo-service
+    ports:
+      - "3001:3001"
+    environment:
+      - GEO_LOG_LEVEL=info
+      - GEO_MAX_AGENTS=10000
+    volumes:
+      - geo-data:/app/data
+    restart: unless-stopped
+    networks:
+      - superinstance
+
+  redis:
+    image: redis:7-alpine
+    container_name: analytics-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - superinstance
+
+volumes:
+  claw-data:
+  geo-data:
+  redis-data:
+
+networks:
+  superinstance:
+    driver: bridge
