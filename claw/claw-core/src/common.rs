@@ -243,6 +243,56 @@ pub struct ClawRelationships {
 }
 
 // ---------------------------------------------------------------------------
+// Social architecture (Phase 7)
+// ---------------------------------------------------------------------------
+
+/// A slave claw — inherits parent's spatial position subset and limited equipment.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SlaveClaw {
+    #[schemars(with = "String")]
+    pub id: Uuid,
+    #[schemars(with = "String")]
+    pub parent_id: Uuid,
+    #[schemars(with = "Vec<String>")]
+    pub inherited_equipment: Vec<EquipmentSlot>,
+    pub spawn_policy: SlaveSpawnPolicy,
+}
+
+/// Policy for slave claw lifecycle.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub enum SlaveSpawnPolicy {
+    /// Spawn when parent confidence drops below threshold.
+    SpawnOnLowConfidence { threshold: f64 },
+    /// Spawn when workload exceeds capacity.
+    SpawnOnOverload { max_queue: i32 },
+    /// Manual spawn only.
+    Manual,
+}
+
+/// A co-worker claw — shares workspace, independent position.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CoWorkerClaw {
+    #[schemars(with = "String")]
+    pub id: Uuid,
+    #[schemars(with = "String")]
+    pub partner_id: Uuid,
+    pub workspace_id: Option<String>,
+    pub coordination_mode: CoordinationMode,
+}
+
+/// Coordination mode between coworkers.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub enum CoordinationMode {
+    /// Shared task queue, independent execution.
+    Parallel,
+    /// Sequential handoff.
+    Pipeline,
+    /// Consensus on every decision.
+    Consensus,
+}
+
+
+// ---------------------------------------------------------------------------
 // Metrics
 // ---------------------------------------------------------------------------
 
