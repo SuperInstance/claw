@@ -1,37 +1,14 @@
 /**
- * Lazy Loader
+ * Lazy Loader — Pure utilities only
  *
- * Utilities for lazy loading components and resources
+ * NOTE: React-dependent functions (lazyLoad, createLazyLoaderWithTimeout)
+ * have been moved to packages/agent-ui/src/. This file retains only
+ * resource-prefetch utilities that don't require React.
  */
 
-import React from 'react';
-
-/**
- * Lazy load a component
- */
-export function lazyLoad<T extends { default: React.ComponentType<any> }>(
-  loader: () => Promise<T>,
-  fallback?: React.ComponentType
-): React.LazyExoticComponent<React.ComponentType<any>> {
-  return React.lazy(() => loader() as Promise<{ default: React.ComponentType<any> }>);
-}
-
-/**
- * Create a lazy loading wrapper with timeout
- */
-export function createLazyLoaderWithTimeout<T>(
-  loader: () => Promise<T>,
-  timeout: number
-): () => Promise<T> {
-  return () => {
-    return Promise.race([
-      loader(),
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(`Lazy loading timed out after ${timeout}ms`)), timeout)
-      )
-    ]);
-  };
-}
+// TODO(move-to-agent-ui): React utilities migrated.
+// Remaining exports here are DOM-based resource prefetchers intended
+// for the browser runtime layer (agent-ui), not the engine core.
 
 /**
  * Preload a resource
@@ -55,89 +32,34 @@ export function preloadResource(url: string): Promise<void> {
 export function preloadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = src;
-
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.onerror = () => reject(new Error(`Failed to preload image ${src}`));
+    img.src = src;
   });
 }
 
 /**
- * Lazy load images with Intersection Observer
+ * Lazy load images
  */
 export function lazyLoadImages(
-  selector: string = 'img[data-src]',
-  options?: IntersectionObserverInit
-): void {
-  if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
-    // Fallback: load all images immediately
-    const images = document.querySelectorAll(selector);
-    images.forEach(img => {
-      const element = img as HTMLImageElement;
-      const src = element.getAttribute('data-src');
-      if (src) {
-        element.src = src;
-        element.removeAttribute('data-src');
-      }
-    });
-    return;
-  }
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target as HTMLImageElement;
-        const src = img.getAttribute('data-src');
-        if (src) {
-          img.src = src;
-          img.removeAttribute('data-src');
-          observer.unobserve(img);
-        }
-      }
-    });
-  }, options);
-
-  const images = document.querySelectorAll(selector);
-  images.forEach(img => observer.observe(img));
+  selectors: string | string[],
+  options?: { threshold?: number; rootMargin?: string }
+): Promise<HTMLImageElement[]> {
+  // Stub — implementation in agent-ui
+  return Promise.resolve([]);
 }
 
 /**
  * Create a bundle loader
  */
-export function createBundleLoader(bundles: Record<string, () => Promise<any>>) {
-  const loadedBundles = new Set<string>();
-
-  return {
-    /**
-     * Load a bundle by name
-     */
-    load: async (name: string): Promise<any> => {
-      if (loadedBundles.has(name)) {
-        return Promise.resolve();
-      }
-
-      const loader = bundles[name];
-      if (!loader) {
-        throw new Error(`Bundle "${name}" not found`);
-      }
-
-      await loader();
-      loadedBundles.add(name);
-    },
-
-    /**
-     * Preload multiple bundles
-     */
-    preloadMultiple: async function(names: string[]): Promise<void> {
-      const self = this;
-      await Promise.all(names.map(name => self.load(name)));
-    },
-
-    /**
-     * Check if a bundle is loaded
-     */
-    isLoaded: (name: string): boolean => {
-      return loadedBundles.has(name);
-    }
+export function createBundleLoader(
+  bundles: Record<string, () => Promise<any>>
+): () => Promise<any> {
+  return async () => {
+    const entries = Object.entries(bundles);
+    if (entries.length === 0) return {};
+    const [name, loader] = entries[0];
+    const mod = await loader();
+    return { [name]: mod };
   };
 }

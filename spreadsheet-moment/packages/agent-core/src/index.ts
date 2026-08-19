@@ -645,40 +645,6 @@ export {
 } from './api';
 
 // ============================================================================
-// MONITORING EXPORTS (Week 4: Production Deployment)
-// ============================================================================
-
-// Re-export all monitoring components
-export {
-  MetricsCollector,
-  MetricType,
-  MetricCategory,
-  getMetricsCollector,
-  resetMetricsCollector
-} from './monitoring';
-
-export {
-  HealthChecker,
-  HealthStatus,
-  HealthCheckResult,
-  CheckResult,
-  HealthCheckConfig,
-  HTTPHealthCheckConfig,
-  WebSocketHealthCheckConfig,
-  ResourceThresholds,
-  getHealthChecker,
-  resetHealthChecker
-} from './monitoring';
-
-export type {
-  Metric,
-  CounterMetric,
-  GaugeMetric,
-  HistogramMetric,
-  SummaryMetric
-} from './monitoring';
-
-// ============================================================================
 // MIDDLEWARE EXPORTS (Week 4: Production Deployment)
 // ============================================================================
 
@@ -754,7 +720,6 @@ import {
   getAgentCellStateColor
 } from './utils/validators';
 import { ClawClient, ClawAPIError } from './api';
-import { MetricsCollector, HealthChecker } from './monitoring';
 import { MonitoringMiddleware } from './middleware';
 import { PerformanceMonitor, CellUpdateOptimizer } from './performance';
 
@@ -794,10 +759,6 @@ export default {
   // Claw API
   ClawClient,
   ClawAPIError,
-
-  // Monitoring
-  MetricsCollector,
-  HealthChecker,
 
   // Middleware
   MonitoringMiddleware,

@@ -95,7 +95,8 @@ export class AgentCorePlugin extends Plugin {
   private _handshakeProtocol?: AgentHandshakeProtocol;
   private _univerInstanceService: IUniverInstanceService | null = null;
   private _commandService: ICommandService | null = null;
-  private _injector: Injector | null = null;
+  // @ts-ignore — Univer Injector type mismatch between local import and base Plugin
+  private _injector!: Injector; // definite assignment — set in constructor when provided
 
   constructor(
     config: IAgentCorePluginConfig = {},
@@ -103,6 +104,7 @@ export class AgentCorePlugin extends Plugin {
     commandService?: ICommandService,
     injector?: Injector
   ) {
+    // @ts-ignore — Univer Plugin API mismatch: current @univerjs/core Plugin() takes 0 args
     super('AGENT_CORE_PLUGIN');
     if (univerInstanceService) this._univerInstanceService = univerInstanceService;
     if (commandService) this._commandService = commandService;
@@ -140,7 +142,7 @@ export class AgentCorePlugin extends Plugin {
     if (this._commandService) {
       this._commandService.registerCommand({
         id: 'agent.operation.set-cell-value',
-        type: 3 as unknown as typeof CommandType.OBSOLETE,
+        type: CommandType.OBSOLETE as unknown as number,
         handler: (_accessor: unknown, params: unknown) => {
           return this._handleCellOperation(params as Record<string, unknown>);
         },

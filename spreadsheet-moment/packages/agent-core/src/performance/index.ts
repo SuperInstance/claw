@@ -14,8 +14,6 @@ export { CUOClass as CellUpdateOptimizer };
 
 // Re-export lazy loader functions
 export {
-  lazyLoad,
-  createLazyLoaderWithTimeout,
   preloadResource,
   preloadImage,
   lazyLoadImages,
