@@ -5,16 +5,17 @@
 
 pub mod common;
 pub mod claw;
+pub mod consensus;
 pub mod equipment;
 pub mod seed;
-pub mod consensus;
+pub mod slot_impls;
 
 // Re-export all public types for convenience
 pub use common::*;
 pub use claw::*;
+pub use consensus::*;
 pub use equipment::*;
 pub use seed::*;
-pub use consensus::*;
 
 #[cfg(test)]
 mod integration_tests {
