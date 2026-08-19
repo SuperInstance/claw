@@ -350,3 +350,120 @@ pub enum Capability {
     SelfImprovement,
     Monitoring,
 }
+
+// ---------------------------------------------------------------------------
+// Spatial index (Phase 6)
+// ---------------------------------------------------------------------------
+
+/// A receptive field — the region of geometric space a claw can perceive or
+/// be affected by.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ReceptiveField {
+    /// Center position in dodecet space.
+    pub center: DodecetPosition,
+    /// Maximum Euclidean query radius.
+    pub radius: f64,
+}
+
+impl Default for ReceptiveField {
+    fn default() -> Self {
+        Self {
+            center: DodecetPosition::default(),
+            radius: 0.0,
+        }
+    }
+}
+
+/// A point in geometric space associated with an agent ID.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SpatialEntry {
+    #[schemars(with = "String")]
+    pub agent_id: Uuid,
+    pub position: DodecetPosition,
+}
+
+impl SpatialEntry {
+    pub fn new(agent_id: Uuid, position: DodecetPosition) -> Self {
+        Self {
+            agent_id,
+            position,
+        }
+    }
+}
+
+/// Trait for spatial indexing structures.
+/// Implementors provide O(log n) nearest-neighbor or radius queries.
+pub trait SpatialIndex {
+    /// Insert a spatial entry.
+    fn insert(&mut self, entry: SpatialEntry);
+
+    /// Remove an entry by agent ID.
+    fn remove(&mut self, agent_id: Uuid) -> Option<SpatialEntry>;
+
+    /// Return all entries within `radius` of `center`.
+    fn query_radius(&self, center: DodecetPosition, radius: f64) -> Vec<&SpatialEntry>;
+
+    /// Return the k-nearest entries to `center`.
+    fn query_knn(&self, center: DodecetPosition, k: usize) -> Vec<&SpatialEntry>;
+}
+
+/// Naive linear spatial index.
+/// Suitable for small fleets (< 1,000 agents) and as a fallback.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct NaiveSpatialIndex {
+    entries: Vec<SpatialEntry>,
+}
+
+impl NaiveSpatialIndex {
+    pub fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+        }
+    }
+
+    /// Euclidean distance squared between two dodecet positions.
+    #[inline]
+    fn distance_sq(a: &DodecetPosition, b: &DodecetPosition) -> i64 {
+        let dx = i64::from(a.x) - i64::from(b.x);
+        let dy = i64::from(a.y) - i64::from(b.y);
+        let dz = i64::from(a.z) - i64::from(b.z);
+        let dt = i64::from(a.theta) - i64::from(b.theta);
+        dx * dx + dy * dy + dz * dz + dt * dt
+    }
+}
+
+impl SpatialIndex for NaiveSpatialIndex {
+    fn insert(&mut self, entry: SpatialEntry) {
+        if let Some(pos) = self.entries.iter().position(|e| e.agent_id == entry.agent_id) {
+            self.entries[pos] = entry;
+        } else {
+            self.entries.push(entry);
+        }
+    }
+
+    fn remove(&mut self, agent_id: Uuid) -> Option<SpatialEntry> {
+        if let Some(pos) = self.entries.iter().position(|e| e.agent_id == agent_id) {
+            Some(self.entries.remove(pos))
+        } else {
+            None
+        }
+    }
+
+    fn query_radius(&self, center: DodecetPosition, radius: f64) -> Vec<&SpatialEntry> {
+        let r_sq = (radius * radius) as i64;
+        self.entries
+            .iter()
+            .filter(|e| {
+                let d_sq = Self::distance_sq(&e.position, &center);
+                d_sq <= r_sq
+            })
+            .collect()
+    }
+
+    fn query_knn(&self, center: DodecetPosition, k: usize) -> Vec<&SpatialEntry> {
+        let mut sorted = self.entries.iter().collect::<Vec<_>>();
+        sorted.sort_by_key(|e| Self::distance_sq(&e.position, &center));
+        sorted.truncate(k);
+        sorted
+    }
+}
