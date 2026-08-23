@@ -1,1 +1,271 @@
-{"title": "Claw Seed Schema", "type": "object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "claw_seed.json",
+  "title": "Claw Seed Schema",
+  "description": "Production schema for a Claw seed — a machine-learnable behavior definition. Maps to P01: natural language purpose, trigger, learning strategy, default equipment. Enhanced from LOG-tensor conditional_geometry_schema (Ψ: (X, P, C) → (X', P', C')) with creative zone parameters and temperature schedule from P56/P57.",
+  "type": "object",
+  "required": [
+    "id", "purpose", "trigger", "learningStrategy", "defaultEquipment"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this seed definition"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000,
+      "description": "Natural language description of the behavior this seed encodes. Used as seed prompt s in Ghost Tile triple GT = (M, s, h)."
+    },
+    "trigger": {
+      "$ref": "#/definitions/trigger",
+      "description": "When this seed activates its agent"
+    },
+    "learningStrategy": {
+      "$ref": "#/definitions/learningStrategy",
+      "description": "How the seed's behavior is optimized on data"
+    },
+    "defaultEquipment": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Equipment modules auto-equipped at agent spawn from this seed"
+    },
+    "creativeZone": {
+      "type": "object",
+      "description": "P02/P56: Optimal Δ ranges for crystallization. κ(Δ) = exp(−(Δ−0.5)²/0.02) is maximized at Δ=0.5.",
+      "properties": {
+        "deltaMin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.4,
+          "description": "Lower bound of optimal crystallization zone"
+        },
+        "deltaMax": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Upper bound of optimal crystallization zone"
+        },
+        "oneiricDeltaMin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Lower bound of oneiric (dream-mode) crystallization zone"
+        },
+        "oneiricDeltaMax": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Upper bound of oneiric crystallization zone"
+        },
+        "kappaSigma": {
+          "type": "number",
+          "default": 0.1,
+          "description": "σ_c — width of the crystallization kernel κ(Δ) = exp(−(Δ−0.5)²/(2σ_c²))"
+        }
+      }
+    },
+    "temperatureSchedule": {
+      "type": "object",
+      "description": "P56/P57: Temperature annealing schedule for crystallization/melt balance. DRM-1: T_idle rises monotonically.",
+      "properties": {
+        "taskMode": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1.0,
+          "description": "Temperature during active task mode"
+        },
+        "idleMode": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Temperature during idle/dream mode. Must be >= taskMode for DRM-1."
+        },
+        "tauT": {
+          "type": "number",
+          "minimum": 0,
+          "description": "τ_T — time constant for T_idle rise after task completion (in seconds)"
+        },
+        "maxTemperature": {
+          "type": "number",
+          "minimum": 0,
+          "default": 5.0,
+          "description": "Hard ceiling for temperature. Above this: overheating alert."
+        },
+        "minTemperature": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.1,
+          "description": "Hard floor for temperature. Below this: frozen agent alert"
+        }
+      }
+    },
+    "dreamConfiguration": {
+      "type": "object",
+      "description": "P60: Configuration for oneiric creative zone behavior",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "maxDreamDuration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum dream phase duration in seconds"
+        },
+        "wakeTrigger": {
+          "type": "string",
+          "enum": ["timeout", "crystallization_complete", "external_event"],
+          "description": "What triggers exit from dream phase"
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/constraint" },
+      "description": "P03: CSPersist constraints. Invariant constraints must hold across all agent states and molt transitions."
+    },
+    "conservationMode": {
+      "type": "string",
+      "enum": ["ONE_PHASE", "TWO_PHASE", "HYBRID"],
+      "default": "ONE_PHASE",
+      "description": "P56/P57: Conservation law mode. ONE_PHASE: η = (1−γ)². TWO_PHASE: tracks η explicitly. HYBRID: context-dependent."
+    },
+    "maxDelta": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.25,
+      "default": 0.25,
+      "description": "Maximum allowed δ = 1−(γ+η). MUST be <= 0.25 per P57. Hard invariant."
+    },
+    "moltThreshold": {
+      "type": "number",
+      "description": "α — multiplier in melt pressure threshold: P_melt > α·κ(Δ)·(1−γ)·1/(1+βT)"
+    },
+    "distributionShiftMu": {
+      "type": "number",
+      "default": 0.01,
+      "description": "μ — coefficient in P_melt = μ·σ·(t−t_v)·γ"
+    },
+    "origin": {
+      "type": "object",
+      "description": "P03: Origin tracking — provenance of this seed definition",
+      "properties": {
+        "derivedFrom": { "type": "string", "format": "uuid", "description": "Parent seed ID if this is a derivative" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "trigger": {
+      "type": "object",
+      "description": "Activation trigger for the agent spawned from this seed",
+      "oneOf": [
+        {
+          "required": ["type", "interval"],
+          "properties": {
+            "type": { "const": "periodic" },
+            "interval": { "type": "integer", "minimum": 1, "description": "Poll interval in milliseconds" }
+          }
+        },
+        {
+          "required": ["type", "event"],
+          "properties": {
+            "type": { "const": "event" },
+            "event": { "type": "string", "description": "CNS event name or external trigger" }
+          }
+        },
+        {
+          "required": ["type", "cron"],
+          "properties": {
+            "type": { "const": "cron" },
+            "cron": { "type": "string", "description": "Cron expression (5-field)" }
+          }
+        },
+        {
+          "required": ["type", "semanticDelta"],
+          "properties": {
+            "type": { "const": "semantic_delta_threshold" },
+            "semanticDelta": { "type": "number", "minimum": 0, "maximum": 1 },
+            "direction": { "type": "string", "enum": ["above", "below"] },
+            "description": "Trigger when |Δ − 0.5| exceeds threshold (creative zone exit)"
+          }
+        },
+        {
+          "required": ["type", "meltPressure"],
+          "properties": {
+            "type": { "const": "melt_pressure_threshold" },
+            "maxCrystallizationRate": { "type": "number" },
+            "description": "Trigger when P_melt > max crystallization rate (molt trigger, P56)"
+          }
+        }
+      ]
+    },
+    "learningStrategy": {
+      "type": "object",
+      "description": "ML learning strategy for optimizing this seed",
+      "oneOf": [
+        {
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "reinforcement" },
+            "algorithm": { "type": "string", "enum": ["PPO", "DQN", "A2C", "custom"] }
+          }
+        },
+        {
+          "required": ["type", "bufferSize"],
+          "properties": {
+            "type": { "const": "replay" },
+            "bufferSize": { "type": "integer", "minimum": 1, "description": "Experience replay buffer size" },
+            "sampling": { "type": "string", "enum": ["uniform", "prioritized", "curriculum"] }
+          }
+        },
+        {
+          "required": ["type", "architecture"],
+          "properties": {
+            "type": { "const": "distillation" },
+            "architecture": { "type": "string", "description": "Target architecture for distilled model" },
+            "targetSize": { "type": "string", "description": "e.g., '2B', '7B', '70M'" }
+          }
+        }
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "required": ["type", "expression"],
+      "description": "P03 CSPersist constraint. Invariant-level constraints must hold forever; range constraints validate on state change.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["invariant", "range", "enum", "regex", "custom", "conservation"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "warning", "info"],
+          "default": "warning"
+        },
+        "field": {
+          "type": "string",
+          "description": "JSON pointer to field (e.g., '/state/gamma') or '/' for whole-agent constraint"
+        },
+        "expression": {
+          "type": "string",
+          "description": "JavaScript expression evaluated in sandbox, or regex for regex-type. For conservation type: 'state.gamma + state.eta + state.delta <= 1 && state.delta <= 0.25'"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message on violation"
+        },
+        "recoveryAction": {
+          "type": "string",
+          "enum": ["alert", "clamp", "molt", "halt"],
+          "description": "What to do when constraint is violated"
+        }
+      }
+    }
+  }
+}

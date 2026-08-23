@@ -1,1 +1,243 @@
-{"title": "Claw Equipment Schema", "type": "object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "claw_equipment.json",
+  "title": "Claw Equipment Schema",
+  "description": "Production schema for Claw equipment modules. Unified from LOG-tensor cold_logic_schema (checking/auditing), channel_depth_schema (perception), foldable_tensor_schema (memory/knowledge), and folding_group_schema (coordination). Equipment are dynamically equipped/unequipped per P59; muscle memory conditions determine re-equip triggers.",
+  "type": "object",
+  "definitions": {
+    "equipmentSlot": {
+      "type": "object",
+      "required": ["type", "active"],
+      "description": "A single equipment slot on a Claw agent",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "SENSOR", "MEMORY", "REASONING", "COMMUNICATION",
+            "COORDINATION", "VERIFICATION", "CREATIVE", "DISTILLATION",
+            "SONAR", "VISION", "AUDIO"
+          ],
+          "description": "Equipment category"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this slot is currently equipped"
+        },
+        "module": { "$ref": "#/definitions/module" },
+        "activationCondition": {
+          "type": "object",
+          "description": "P59: Condition for auto-equip (muscle memory). When true, this equipment is re-equipped automatically after unequip."
+        },
+        "cost": {
+          "type": "object",
+          "properties": {
+            "memoryMB": { "type": "integer", "minimum": 0, "description": "Memory overhead in megabytes" },
+            "computeMS": { "type": "integer", "minimum": 0, "description": "Compute cost per operation in milliseconds" },
+            "gammaDrain": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Crystallized intelligence drain rate per operation. Higher drain = faster un-equip when γ high."
+            }
+          }
+        },
+        "unequipReason": {
+          "type": "string",
+          "enum": ["cost_optimization", "molt", "resource_pressure", "manual"],
+          "description": "Why this equipment was unequipped. Recorded for muscle memory learning."
+        },
+        "equippedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this equipment was last equipped"
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["id", "name", "category"],
+      "description": "An equipment module definition",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["sensor", "memory", "reasoning", "communication", "coordination", "verification", "creative", "distillation"],
+          "description": "Module category. Maps to equipment slot types."
+        },
+        "description": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of capabilities this module provides"
+        },
+        "configSchema": {
+          "type": "object",
+          "description": "JSON Schema for module-specific configuration"
+        },
+        "costProfile": {
+          "type": "object",
+          "properties": {
+            "memoryMB": { "type": "integer", "minimum": 0 },
+            "computeMS": { "type": "integer", "minimum": 0 },
+            "gammaDrain": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    },
+    "coldLogicChecker": {
+      "type": "object",
+      "required": ["id", "name", "type", "triggerConfig", "checkChain", "adjustmentConfig"],
+      "description": "LOG-tensor cold_logic: Deterministic checking mechanism. Can sit idle, checking down the chain for problems and recommending adjustments.",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["performance", "correctness", "resource", "compliance", "security", "quality", "drift", "anomaly", "custom"],
+          "description": "Type of checking performed"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5,
+          "description": "Priority of this checker (1=lowest, 10=highest)"
+        },
+        "description": { "type": "string" },
+        "triggerConfig": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "type": "string", "enum": ["periodic", "event", "on_molt", "on_validation"] },
+            "intervalMs": { "type": "integer" },
+            "event": { "type": "string" }
+          }
+        },
+        "checkChain": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/checkStep" },
+          "minItems": 1,
+          "description": "Ordered sequence of checks to perform"
+        },
+        "adjustmentConfig": {
+          "type": "object",
+          "description": "What to do when a check fails",
+          "properties": {
+            "onFail": {
+              "type": "string",
+              "enum": ["alert", "adjust_gamma", "increase_temperature", "trigger_molt", "unequip", "halt"]
+            },
+            "maxRetries": { "type": "integer", "default": 3 },
+            "cooldownMs": { "type": "integer", "default": 60000 }
+          }
+        }
+      }
+    },
+    "checkStep": {
+      "type": "object",
+      "required": ["id", "check"],
+      "properties": {
+        "id": { "type": "string" },
+        "check": {
+          "type": "string",
+          "description": "Expression or function name to evaluate. E.g., 'state.gamma < 0.3' or 'validateConservation()'"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "warning", "info"],
+          "default": "warning"
+        },
+        "message": { "type": "string" }
+      }
+    },
+    "channelDepthConfig": {
+      "type": "object",
+      "description": "LOG-tensor channel_depth: Perception depth configuration. Analogous to echo sounding: how deep does this sensor go?",
+      "properties": {
+        "channelId": { "type": "string" },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum depth of channel monitoring (analogous to fathoms)"
+        },
+        "capacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Capacity of this channel (0-1). Below 0.1: bottleneck alert."
+        },
+        "flow": {
+          "type": "string",
+          "enum": ["inbound", "outbound", "bidirectional"],
+          "description": "Direction of data flow"
+        }
+      }
+    },
+    "foldableTensorConfig": {
+      "type": "object",
+      "description": "LOG-tensor foldable_tensor: Knowledge compression/decompression. Enables O(1) knowledge retrieval via program indexing.",
+      "properties": {
+        "tensorId": { "type": "string" },
+        "rank": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Tensor rank (number of dimensions)"
+        },
+        "decomposition": {
+          "type": "string",
+          "enum": ["CP", "Tucker", "TensorTrain", "None"],
+          "description": "Decomposition strategy for knowledge compression"
+        },
+        "compressionRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Achieved compression ratio. 0 = no compression, 1 = maximum"
+        },
+        "foldDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many fold/unfold cycles to apply when encoding"
+        }
+      }
+    },
+    "foldingGroupConfig": {
+      "type": "object",
+      "description": "LOG-tensor folding_group: Coordination and consensus. Folding group symmetry enabled multi-agent coordination.",
+      "properties": {
+        "groupId": { "type": "string", "format": "uuid" },
+        "members": {
+          "type": "array",
+          "items": { "type": "string", "format": "uuid" },
+          "minItems": 1,
+          "description": "Member agent IDs in this coordination group"
+        },
+        "generator": { "type": "string", "description": "Generator specification defining the group symmetry" },
+        "consensusThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.67,
+          "description": "Minimum agreement ratio for consensus (tripartite = 0.67)"
+        },
+        "quorum": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum number of members required for group action"
+        }
+      }
+    },
+    "sonarConfig": {
+      "type": "object",
+      "description": "Hermes-specific: Sonar/sounder perception equipment. Maritime units: depth in fathoms, range in NM.",
+      "properties": {
+        "frequencyHz": { "type": "number", "minimum": 0 },
+        "maxRangeNM": { "type": "number", "minimum": 0, "description": "Maximum range in nautical miles" },
+        "maxDepthFathoms": { "type": "number", "minimum": 0, "description": "Maximum depth sounding in fathoms" },
+        "pingIntervalMs": { "type": "integer", "minimum": 100 },
+        "channels": { "type": "integer", "minimum": 1, "maximum": 360, "description": "Sonar channel count (1-360 for full sweep)" }
+      }
+    }
+  }
+}

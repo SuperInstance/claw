@@ -1,1 +1,352 @@
-{"title": "Claw Agent Schema", "type": "object"}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "claw_agent.json",
+  "title": "Claw Agent Schema",
+  "description": "Production schema for a Claw cellular agent. Defines state (γ, η, δ), model config, seed, equipment, shell lifecycle, and molt protocol. Enforced by Verification Checklist CONS-1..CONS-3, MOLT-1..MOLT-6, OPT-1.",
+  "type": "object",
+  "required": [
+    "id", "version", "name", "model", "state",
+    "gamma", "eta", "delta",
+    "equipment", "seed", "shell",
+    "temperature", "semanticDistance",
+    "moltCount", "lastValidation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the Claw agent"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this Claw agent definition"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for this agent"
+    },
+    "model": {
+      "type": "object",
+      "required": ["provider", "modelId"],
+      "description": "ML model configuration for this agent",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Model provider (e.g., 'openai', 'anthropic', 'ollama')"
+        },
+        "modelId": {
+          "type": "string",
+          "description": "Specific model identifier"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 1.0,
+          "description": "Gumbel-Softmax temperature T. Task mode T≈1.0, idle mode T≈2.0"
+        },
+        "deterministic": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, enforces T=0, fixed seed for deterministic Ghost Tile semantics"
+        },
+        "contextWindow": {
+          "type": "integer",
+          "description": "Maximum context window in tokens"
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "required": ["gamma", "eta", "delta"],
+      "description": "Thermodynamic state variables per P56-60. Conservation law: γ + η + δ = 1, δ ∈ [0, 0.25]",
+      "properties": {
+        "gamma": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "γ — Crystallized intelligence (c̄). Increases when semantic distance Δ ∈ [0.4, 0.6]"
+        },
+        "eta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "η — Liquid intelligence. η = (1−γ)² in one-phase model (P56 Eq 3)"
+        },
+        "delta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.25,
+          "description": "δ — Conservation deviation from ideal conservation. δ = 1−(γ+η). Must be in [0, 0.25]"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["ONE_PHASE", "TWO_PHASE", "HYBRID"],
+          "description": "Operational mode: ONE_PHASE uses η = (1−γ)²; TWO_PHASE tracks η explicitly"
+        },
+        "crystallizationRate": {
+          "type": "number",
+          "description": "dγ/dt — current crystallization rate. Positive when in creative zone (Δ∈[0.4,0.6])"
+        }
+      }
+    },
+    "temperature": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Current Gumbel-Softmax temperature T. DRM-1: T_idle rises monotonically. Clamping: [0.1, ∞)"
+    },
+    "semanticDistance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Δ(t) — current semantic distance from knowledge base. Creative zone: Δ∈[0.4, 0.6]. P02/P56"
+    },
+    "lastValidation": {
+      "type": "string",
+      "format": "date-time",
+      "description": "t_v — timestamp when γ was last validated against current data. Staleness drives melt pressure."
+    },
+    "moltCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Number of completed molt transitions. MOLT-6: molt chain < 5. P59"
+    },
+    "capability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "m(t) — current capability after molt transition. MOLT-4: m(t) = m(0)·min(1, γ(t))"
+    },
+    "equipment": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/equipmentSlot" },
+      "description": "Active equipment modules. Equipment are dynamically equipped/unequipped per P59."
+    },
+    "seed": {
+      "$ref": "#/definitions/seed",
+      "description": "Seed definition: purpose, trigger, learning strategy, default equipment"
+    },
+    "shell": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Shell identifier (canonical identity reference)"
+        },
+        "moltCount": {
+          "type": "integer",
+          "maximum": 5,
+          "description": "Count of molt transitions this shell has undergone"
+        },
+        "lastMolt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last molt transition"
+        },
+        "identityHash": {
+          "type": "string",
+          "description": "SHA-256 hash of (model.weights || seed || hash). P03 Kan extension invariant: π₁ ∘ μ = id_S. Used for MOLT-5 identity preservation check."
+        },
+        "history": {
+          "type": "array",
+          "items": { "type": "string", "format": "date-time" },
+          "description": "Timestamps of all molt events"
+        }
+      }
+    },
+    "executionContext": {
+      "type": "object",
+      "description": "P01/P56: Ghost Tile execution context C for deterministic semantics",
+      "properties": {
+        "kvCacheFingerprint": {
+          "type": "string",
+          "description": "Hash of KV-cache state at last inference"
+        },
+        "attentionPatternHash": {
+          "type": "string",
+          "description": "Hash of attention pattern at last inference"
+        },
+        "activationSummary": {
+          "type": "array",
+          "items": { "type": "number" },
+          "maxItems": 64,
+          "description": "Compressed representation of intermediate activations"
+        },
+        "lastInputHash": {
+          "type": "string",
+          "description": "SHA-256 of last input (s ⊕ x) for determinism verification"
+        },
+        "lastOutputHash": {
+          "type": "string",
+          "description": "SHA-256 of last output for determinism verification"
+        }
+      }
+    },
+    "capability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "m(t) — current capability after molt transition. P59 MOLT-4"
+    },
+    "origin": {
+      "type": "object",
+      "description": "P03: Origin tracking — where this agent was spawned from",
+      "properties": {
+        "spawnedBy": { "type": "string", "format": "uuid" },
+        "spawnContext": { "type": "string" },
+        "spawnTimestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata. checkpointId for resumability.",
+      "properties": {
+        "checkpointId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "definitions": {
+    "equipmentSlot": {
+      "type": "object",
+      "required": ["type", "active"],
+      "description": "An equipment slot on a Claw agent",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "SENSOR", "MEMORY", "REASONING", "COMMUNICATION",
+            "COORDINATION", "VERIFICATION", "CREATIVE", "DISTILLATION",
+            "SONAR", "VISION", "AUDIO"
+          ],
+          "description": "Equipment category"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether this equipment is currently equipped"
+        },
+        "module": { "$ref": "#/definitions/module" },
+        "activationCondition": {
+          "type": "object",
+          "description": "P59: Condition for auto-equip. Used for muscle memory extraction."
+        },
+        "cost": {
+          "type": "object",
+          "properties": {
+            "memoryMB": { "type": "integer" },
+            "computeMS": { "type": "integer" },
+            "gammaDrain": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "required": ["id", "name", "category"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["sensor", "memory", "reasoning", "communication", "coordination", "verification", "creative", "distillation"]
+        },
+        "description": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "configSchema": { "type": "object" }
+      }
+    },
+    "seed": {
+      "type": "object",
+      "required": ["purpose", "trigger", "learningStrategy", "defaultEquipment"],
+      "description": "Seed definition: machine-learnable behavior definition. P01",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Natural language description of the agent's purpose"
+        },
+        "trigger": { "$ref": "#/definitions/trigger" },
+        "learningStrategy": { "$ref": "#/definitions/learningStrategy" },
+        "defaultEquipment": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Equipment types auto-equipped at spawn"
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/constraint" },
+          "description": "P03: CSPersist constraints defining valid operation space"
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "description": "Event or schedule that activates this agent",
+      "oneOf": [
+        {
+          "required": ["type", "interval"],
+          "properties": {
+            "type": { "const": "periodic" },
+            "interval": { "type": "integer", "minimum": 1, "description": "Poll interval in ms" }
+          }
+        },
+        {
+          "required": ["type", "event"],
+          "properties": {
+            "type": { "const": "event" },
+            "event": { "type": "string", "description": "CNS event name to listen for" }
+          }
+        },
+        {
+          "required": ["type", "cron"],
+          "properties": {
+            "type": { "const": "cron" },
+            "cron": { "type": "string", "description": "Cron expression" }
+          }
+        }
+      ]
+    },
+    "learningStrategy": {
+      "type": "object",
+      "description": "How this agent's behavior is learned/optimized",
+      "oneOf": [
+        { "required": ["type"], "properties": { "type": { "const": "reinforcement" } } },
+        {
+          "required": ["type", "bufferSize"],
+          "properties": {
+            "type": { "const": "replay" },
+            "bufferSize": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "required": ["type", "architecture"],
+          "properties": {
+            "type": { "const": "distillation" },
+            "architecture": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "required": ["type", "expression"],
+      "description": "P03 CSPersist constraint: guarantees invariant preservation across phases",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["invariant", "range", "enum", "regex", "custom"]
+        },
+        "field": { "type": "string", "description": "JSON pointer to the field this constraint applies to" },
+        "expression": { "type": "string", "description": "Logical expression or regex" },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}
