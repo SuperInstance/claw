@@ -12,4 +12,4 @@ pub use crate::runner::ClawRuntime;
 pub use crate::state::{ClawStateMachine, ClawConfig, StateModifiers};
 pub use crate::triggers::{TriggerEvent, TriggerFuture};
 pub use crate::equipment::{EquipmentId, EquipmentRegistry, EquipmentModule, EquipmentOutput};
-pub use crate::model::{ModelClient, StubModelClient, InferenceResult, ModelError};
+pub use crate::model::{ModelClient, StubModelClient, DeepInfraClient, InferenceResult, ModelError};

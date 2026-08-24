@@ -3,6 +3,12 @@
 
 use async_trait::async_trait;
 use claw_core::ModelConfiguration;
+use reqwest::Client;
+use serde_json::json;
+
+// -----------------------------------------------------------------------------
+// Core Types
+// -----------------------------------------------------------------------------
 
 /// The result of a model inference.
 #[derive(Debug, Clone)]
@@ -18,6 +24,10 @@ pub struct TokenUsage {
     pub total_tokens: u32,
 }
 
+// -----------------------------------------------------------------------------
+// Trait
+// -----------------------------------------------------------------------------
+
 /// A trait defining how a Claw interacts with a model.
 /// This allows swapping out implementations (OpenAI, Anthropic, Local, Stub).
 #[async_trait]
@@ -26,29 +36,29 @@ pub trait ModelClient: Send + Sync {
     fn name(&self) -> &str;
 
     /// Executes a chat completion inference.
-    /// 
-    /// # Arguments
-    /// * `prompt` - The user/system prompt to send.
-    /// * `config` - The specific model configuration (temperature, etc.).
     async fn chat_completion(
-        &self, 
-        prompt: &str, 
+        &self,
+        prompt: &str,
         config: &ModelConfiguration
     ) -> Result<InferenceResult, ModelError>;
 }
+
+// -----------------------------------------------------------------------------
+// Errors
+// -----------------------------------------------------------------------------
 
 /// Errors that can occur during model interaction.
 #[derive(Debug, thiserror::Error)]
 pub enum ModelError {
     #[error("Network error: {0}")]
     Network(String),
-    
+
     #[error("API error: {0}")]
     Api(String),
-    
+
     #[error("Configuration error: {0}")]
     Config(String),
-    
+
     #[error("Provider not supported: {0}")]
     UnsupportedProvider(String),
 }
@@ -58,7 +68,6 @@ pub enum ModelError {
 // -----------------------------------------------------------------------------
 
 /// A stub client that echoes the prompt or returns predefined text.
-/// Used for local testing without API keys.
 pub struct StubModelClient;
 
 #[async_trait]
@@ -68,11 +77,10 @@ impl ModelClient for StubModelClient {
     }
 
     async fn chat_completion(
-        &self, 
-        prompt: &str, 
+        &self,
+        prompt: &str,
         _config: &ModelConfiguration
     ) -> Result<InferenceResult, ModelError> {
-        // Simulate network delay
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
         
         Ok(InferenceResult {
@@ -83,5 +91,89 @@ impl ModelClient for StubModelClient {
                 total_tokens: 30,
             }),
         })
+    }
+}
+
+// -----------------------------------------------------------------------------
+// DeepInfra Implementation (Real API)
+// -----------------------------------------------------------------------------
+
+/// Client for Api.deepinfra.com.
+/// Uses the OpenAI-compatible API endpoint.
+pub struct DeepInfraClient {
+    client: Client,
+    api_key: String,
+}
+
+impl DeepInfraClient {
+    /// Create a new client from the `DEEPINFRA_API_TOKEN` environment variable.
+    pub fn from_env() -> Result<Self, ModelError> {
+        let api_key = std::env::var("DEEPINFRA_API_TOKEN")
+            .map_err(|_| ModelError::Config("DEEPINFRA_API_TOKEN environment variable not set.".to_string()))?;
+        
+        Ok(Self {
+            client: Client::new(),
+            api_key,
+        })
+    }
+}
+
+#[async_trait]
+impl ModelClient for DeepInfraClient {
+    fn name(&self) -> &str {
+        "DeepInfraClient"
+    }
+
+    async fn chat_completion(
+        &self,
+        prompt: &str,
+        config: &ModelConfiguration
+    ) -> Result<InferenceResult, ModelError> {
+        let url = "https://api.deepinfra.com/v1/openai/chat/completions";
+        
+        let body = json!({
+            "model": config.model_id,
+            "messages": [
+                { "role": "user", "content": prompt }
+            ],
+            "temperature": config.temperature.unwrap_or(0.7),
+            "max_tokens": config.max_tokens.unwrap_or(1024),
+        });
+
+        let response = self.client.post(url)
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Content-Type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| ModelError::Network(format!("Request failed: {}", e)))?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.unwrap_or_else(|_| "No body".to_string());
+            return Err(ModelError::Api(format!("API Error {}: {}", status, error_text)));
+        }
+
+        let json: serde_json::Value = response.json().await
+            .map_err(|e| ModelError::Network(format!("Failed to parse response: {}", e)))?;
+
+        let content = json["choices"][0]["message"]["content"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        
+        let usage = json.get("usage").and_then(|u| {
+            let prompt = u["prompt_tokens"].as_u64().map(|v| v as u32);
+            let completion = u["completion_tokens"].as_u64().map(|v| v as u32);
+            let total = u["total_tokens"].as_u64().map(|v| v as u32);
+            
+            Some(TokenUsage {
+                prompt_tokens: prompt.unwrap_or(0),
+                completion_tokens: completion.unwrap_or(0),
+                total_tokens: total.unwrap_or(0),
+            })
+        });
+
+        Ok(InferenceResult { content, usage })
     }
 }
