@@ -1,0 +1,14 @@
+//! Claw Runtime
+//! The async event loop and execution environment.
+
+pub mod state;
+pub mod triggers;
+pub mod equipment;
+pub mod runner;
+pub mod model;
+
+// Re-export key types for easy access
+pub use crate::runner::ClawRuntime;
+pub use crate::state::ClawStateMachine;
+pub use crate::triggers::{create_trigger, TriggerFuture};
+pub use crate::model::{ModelClient, StubModelClient, InferenceResult, ModelError};
