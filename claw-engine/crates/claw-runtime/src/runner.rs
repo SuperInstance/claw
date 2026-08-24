@@ -1,72 +1,98 @@
-//! The Claw Runtime
-//! Orchestrates the agent lifecycle: Trigger -> Think -> Act -> Sleep.
+//! The Claw Runtime.
+//!
+//! Orchestrates the `ClawStateMachine`, connecting triggers to model calls.
 
-use crate::model::ModelClient;
-use crate::state::ClawStateMachine;
-use crate::triggers::{create_trigger, TriggerFuture};
-use claw_core::ClawAgent;
-use std::pin::Pin;
 use tracing::{info, error};
+use crate::state::{ClawStateMachine, ClawConfig};
+use crate::model::{ModelClient, StubModelClient};
+use crate::equipment::EquipmentRegistry;
+use crate::triggers::TriggerEvent;
 
-/// The main execution environment for a ClawAgent.
+/// The main runtime for a Claw instance.
+///
+/// It holds the state machine, the model client, and the equipment registry.
 pub struct ClawRuntime {
     state_machine: ClawStateMachine,
-    trigger: TriggerFuture,
+    model_client: Box<dyn ModelClient>,
+    equipment_registry: EquipmentRegistry,
 }
 
 impl ClawRuntime {
-    /// Creates a new Runtime for a given ClawAgent.
-    /// 
-    /// # Arguments
-    /// * `agent` - The agent configuration.
-    /// * `model_client` - The client to use for LLM inference.
-    pub fn new(agent: ClawAgent, model_client: Box<dyn ModelClient>) -> Self {
-        let trigger = create_trigger(&agent.seed.trigger);
-        let state_machine = ClawStateMachine::new(agent, model_client);
-        
-        info!("Runtime initialized for Agent: {:?}", state_machine.agent().id);
-        
+    /// Create a new Runtime with the default Stub client.
+    pub fn new(config: ClawConfig) -> Self {
+        Self::with_client(config, Box::new(StubModelClient))
+    }
+
+    /// Create a new Runtime with a specific client.
+    pub fn with_client(config: ClawConfig, model_client: Box<dyn ModelClient>) -> Self {
+        let mut state_machine = ClawStateMachine::new(config.clone());
+
+        // Equip initial modules
+        for equip_id in &config.initial_equipment {
+            state_machine.equip(*equip_id);
+        }
+
+        info!("Runtime initialized for Agent: {:?}", config.id);
+
         Self {
             state_machine,
-            trigger,
+            model_client,
+            equipment_registry: EquipmentRegistry::new(),
         }
     }
 
-    /// Runs the main loop forever (or until energy is depleted).
+    /// Run a single step of the runtime.
+    ///
+    /// This is usually called in a loop.
     pub async fn run(&mut self) {
-        loop {
-            info!("Runtime: Waiting for trigger...");
-            
-            // Wait for the trigger to fire.
-            Pin::new(&mut self.trigger).await;
-
-            info!("Runtime: Trigger fired. Executing Tick.");
-            
-            // Execute the state machine logic (Async: calls LLM)
-            self.state_machine.tick().await;
-            
-            // Report status
-            let agent = self.state_machine.agent();
-            
-            // Check for Error state
-            if agent.state.phase == claw_core::Phase::Error {
-                error!("Runtime: Agent is in Error state. Stopping loop.");
-                break;
+        // For now, we just tick with no specific trigger.
+        // In a real system, this would listen to a channel of TriggerEvents.
+        match self.tick(None).await {
+            Ok(res) => {
+                info!("Tick Result: {}", res.content);
+                if let Some(usage) = res.usage {
+                    info!("Usage: {} tokens", usage.total_tokens);
+                }
             }
-
-            info!(
-                "Runtime: Tick Complete. Phase: {:?}, Gen: {}, Gamma: {:.2}, Eta: {:.2}",
-                agent.state.phase,
-                agent.state.molt.generation,
-                agent.state.gamma.potential,
-                agent.state.eta.entropy
-            );
-            
-            // Shutdown if energy is gone
-            if agent.state.gamma.potential <= 0.0 {
-                error!("Runtime: Agent Gamma (Potential) depleted. Stopping loop.");
-                break;
+            Err(e) => {
+                error!("Tick Error: {}", e);
             }
         }
+    }
+
+    /// Handle a specific trigger event.
+    pub async fn handle_trigger(&mut self, event: TriggerEvent) {
+        let data = match event {
+            TriggerEvent::Timer => Some("Timer fired".to_string()),
+            TriggerEvent::CellChange(cell_id) => Some(format!("Cell {} changed", cell_id)),
+            TriggerEvent::Message(msg) => Some(msg),
+            TriggerEvent::Custom(data) => Some(data),
+        };
+
+        match self.tick(data.as_deref()).await {
+            Ok(res) => {
+                info!("Trigger Result: {}", res.content);
+                if let Some(usage) = res.usage {
+                    info!("Usage: {} tokens", usage.total_tokens);
+                }
+            }
+            Err(e) => {
+                error!("Trigger handling failed: {}", e);
+            }
+        }
+    }
+
+    /// Internal tick logic.
+    async fn tick(&mut self, trigger_data: Option<&str>) -> Result<crate::model::InferenceResult, String> {
+        self.state_machine.tick(
+            trigger_data,
+            self.model_client.as_ref(),
+            &self.equipment_registry,
+        ).await
+    }
+    
+    /// Get a reference to the state machine (for inspection).
+    pub fn state(&self) -> &ClawStateMachine {
+        &self.state_machine
     }
 }

@@ -1,17 +1,29 @@
 //! Trigger System
-//! Converts the Seed Trigger configuration into a Future that resolves when the condition is met.
+//! Defines events that can trigger the claw, and futures for awaiting conditions.
 
-use claw_core::Trigger;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::time::{Duration, Interval};
 
+/// An event that triggers the claw to think or act.
+#[derive(Debug, Clone)]
+pub enum TriggerEvent {
+    /// A periodic timer fired.
+    Timer,
+    /// A cell in the spreadsheet changed.
+    CellChange(String), // Cell ID
+    /// Received a direct message.
+    Message(String),
+    /// Custom trigger with data.
+    Custom(String),
+}
+
 /// A future that awaits a specific trigger condition.
 pub enum TriggerFuture {
-    /// Periodic ticking trigger
+    /// Periodic ticking trigger.
     Periodic(Interval),
-    /// Stub for unsupported triggers (Event, Cron)
+    /// Stub for unsupported triggers.
     Pending,
 }
 
@@ -26,16 +38,16 @@ impl Future for TriggerFuture {
     }
 }
 
-/// Creates a TriggerFuture from a Trigger configuration.
-pub fn create_trigger(trigger: &Trigger) -> TriggerFuture {
-    match trigger {
-        Trigger::Periodic { interval } => {
-            let duration = Duration::from_millis(*interval);
-            let interval = tokio::time::interval(duration);
-            TriggerFuture::Periodic(interval)
-        }
-        // Event and Cron triggers are currently unsupported in this minimal runtime
-        // They are stubbed to return Poll::Pending
-        Trigger::Event { .. } | Trigger::Cron { .. } => TriggerFuture::Pending,
-    }
-}
+// Note: `create_trigger` function is commented out because `claw_core::Trigger` 
+// is not yet implemented in this minimal phase.
+// 
+// pub fn create_trigger(trigger: &claw_core::Trigger) -> TriggerFuture {
+//     match trigger {
+//         claw_core::Trigger::Periodic { interval } => {
+//             let duration = Duration::from_millis(*interval);
+//             let interval = tokio::time::interval(duration);
+//             TriggerFuture::Periodic(interval)
+//         }
+//         _ => TriggerFuture::Pending,
+//     }
+// }
